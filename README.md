@@ -4,7 +4,7 @@ PerplexMail is an open source package for the Umbraco CMS. The package can be in
 
 This repository contains all the core files necessery to build the PerplexMail package. If you are only looking to download the package file for your Umbraco installation, or you are looking for additional information or documentation, please refer to our package page on our.umbraco.org:
 
-<a target="_blank" href="https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/">https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/</a>
+https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/
 
 <h2>About the package</h2>
 To get started simply download the repository ZIP file and open up the solution. The solution comes with two projects: The PerplexMail library project and the PerplerxMail workflow library project. The former project contains all the core files that the package requires to run. The workflow project is optional as this library is only used when you use the Umbraco Forms feature.
