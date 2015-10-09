@@ -16,9 +16,10 @@ Package.xml file: This file includes information regarding the included Umbraco 
 Readme.txt: The Umbraco installer text is included in this file.
 
 <h3>Support & Contribution</h3>
-If you decide to try out our package, we would very much like to hear from you on our feedback forum. The package is under constant development, so if yo have any ideas or features you would like to see, please let us know:
+If you decide to try out our package, we would love to hear from you! The package is under constant development, so if you have any ideas or features you would like to see, please let us know:
 
-<a target="_blank" href="https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/feedback/">https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/feedback/</a>
+https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/feedback/
 
-If you run into trouble when you use the package, please send us an e-mail or let us know on the bug forum.
-<a target="_blank" href="https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/bugs/">https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/bugs/</a>
+If you run into trouble when you use the package, please let us know! You can send us an e-mail or leave a message on our forum:
+
+https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/bugs/
