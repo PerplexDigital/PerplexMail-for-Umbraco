@@ -4,3 +4,9 @@ F:\Projecten\PerplexMail\PerplexMail.Workflow\bin\Release\PerplexMail.Workflow.p
 F:\Projecten\PerplexMail\PerplexMail.Workflow\obj\Release\PerplexMail.Workflow.csprojResolveAssemblyReference.cache
 F:\Projecten\PerplexMail\PerplexMail.Workflow\obj\Release\PerplexMail.Workflow.dll
 F:\Projecten\PerplexMail\PerplexMail.Workflow\obj\Release\PerplexMail.Workflow.pdb
+F:\Projecten\Github\PerplexMail\PerplexMail.Workflow\bin\Release\PerplexMail.Workflow.dll.config
+F:\Projecten\Github\PerplexMail\PerplexMail.Workflow\bin\Release\PerplexMail.Workflow.dll
+F:\Projecten\Github\PerplexMail\PerplexMail.Workflow\bin\Release\PerplexMail.Workflow.pdb
+F:\Projecten\Github\PerplexMail\PerplexMail.Workflow\obj\Release\PerplexMail.Workflow.csprojResolveAssemblyReference.cache
+F:\Projecten\Github\PerplexMail\PerplexMail.Workflow\obj\Release\PerplexMail.Workflow.dll
+F:\Projecten\Github\PerplexMail\PerplexMail.Workflow\obj\Release\PerplexMail.Workflow.pdb
