@@ -4,7 +4,7 @@ PerplexMail is an open source package for the Umbraco CMS. The package can be in
 
 This repository contains all the core files necessery to build the PerplexMail package. If you are only looking to download the package file for your Umbraco installation, or you are looking for additional information or documentation, please refer to our package page on our.umbraco.org:
 
-<a href="https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/">https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/</a>
+<a target="_blank" href="https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/">https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/</a>
 
 <h2>About the package</h2>
 To get started simply download the repository ZIP file and open up the solution. The solution comes with two projects: The PerplexMail library project and the PerplerxMail workflow library project. The former project contains all the core files that the package requires to run. The workflow project is optional as this library is only used when you use the Umbraco Forms feature.
@@ -18,8 +18,7 @@ Readme.txt: The Umbraco installer text is included in this file.
 <h3>Support & Contribution</h3>
 If you decide to try out our package, we would very much like to hear from you on our feedback forum. The package is under constant development, so if yo have any ideas or features you would like to see, please let us know:
 
-https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/feedback/
+<a target="_blank" href="https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/feedback/">https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/feedback/</a>
 
 If you run into trouble when you use the package, please send us an e-mail or let us know on the bug forum.
-
-https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/bugs/
+<a target="_blank" href="https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/bugs/">https://our.umbraco.org/projects/backoffice-extensions/perplexmail-for-umbraco/bugs/</a>
