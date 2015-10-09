@@ -1,0 +1,6 @@
+F:\Projecten\PerplexMail\PerplexMail.Workflow\bin\Debug\PerplexMail.Workflow.dll.config
+F:\Projecten\PerplexMail\PerplexMail.Workflow\bin\Debug\PerplexMail.Workflow.dll
+F:\Projecten\PerplexMail\PerplexMail.Workflow\bin\Debug\PerplexMail.Workflow.pdb
+F:\Projecten\PerplexMail\PerplexMail.Workflow\obj\Debug\PerplexMail.Workflow.csprojResolveAssemblyReference.cache
+F:\Projecten\PerplexMail\PerplexMail.Workflow\obj\Debug\PerplexMail.Workflow.dll
+F:\Projecten\PerplexMail\PerplexMail.Workflow\obj\Debug\PerplexMail.Workflow.pdb

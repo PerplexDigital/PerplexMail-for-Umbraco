@@ -1,0 +1,16 @@
+<link rel="stylesheet" href="/App_Plugins/PerplexMail/style.css">
+
+<div ng-controller="SendTestEmailController.Controller" ng-init="init();" class="mail-item">
+	<div class="mail-row">
+    	<input type="text" placeholder="Email address recipient" ng-model="receiver" style="width: 75%;" />
+    	<a href class="btn btn-primary btn-send" ng-click="sendTestEmail(receiver);" ng-disabled="loading">Send</a>
+    </div>
+
+    <div ng-repeat="tag in model.value" class="mail-row">
+        <input type="text" style="width: 43%;" ng-model="tag.Tag" placeholder="[#tag#]" />
+        <input type="text" style="width: 43%;" ng-model="tag.Value" placeholder="value" />
+        <a href class="btn btn-danger btn-remove-mail" ng-click="removeRow($index);" style="float: right;">-</a>
+    </div>
+
+    <a href class="btn btn-success btn-add-mail" ng-click="addRow();">+</a>
+</div>

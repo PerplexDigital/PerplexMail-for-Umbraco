@@ -1,0 +1,9 @@
+F:\Projecten\PerplexMail\PerplexMail\bin\Debug\PerplexMail.dll.config
+F:\Projecten\PerplexMail\PerplexMail\bin\Debug\PerplexMail.dll
+F:\Projecten\PerplexMail\PerplexMail\bin\Debug\PerplexMail.pdb
+F:\Projecten\PerplexMail\PerplexMail\obj\Debug\PerplexMail.dll
+F:\Projecten\PerplexMail\PerplexMail\obj\Debug\PerplexMail.pdb
+F:\Projecten\PerplexMail\PerplexMail\bin\Debug\HtmlAgilityPack.dll
+F:\Projecten\PerplexMail\PerplexMail\bin\Debug\HtmlAgilityPack.pdb
+F:\Projecten\PerplexMail\PerplexMail\bin\Debug\HtmlAgilityPack.xml
+F:\Projecten\PerplexMail\PerplexMail\obj\Debug\PerplexMail.csprojResolveAssemblyReference.cache

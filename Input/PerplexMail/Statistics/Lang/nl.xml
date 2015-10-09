@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<language>
+    <creator>
+        <name>Wouter van der Beek</name>
+        <link>http://www.perplex.nl</link>
+    </creator>
+    <area alias="general">
+        <key alias="titelZoeken">HET WERKT</key>
+    </area>
+</language>

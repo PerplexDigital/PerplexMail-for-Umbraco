@@ -1,0 +1,11 @@
+<link rel="stylesheet" href="/App_Plugins/PerplexMail/style.css">
+
+<div ng-controller="EmailPickerMultipleController.Controller" ng-init="init();" class="mail-item">
+    <!-- Repeat through all available emails -->
+    <div ng-repeat="email in model.value" class="mail-row">
+        <input type="text" style="width: 43%;" ng-model="email.Address" placeholder="Email" />
+        <input type="text" style="width: 43%;" ng-model="email.DisplayName" placeholder="Name" />
+        <a href class="btn btn-danger btn-remove-mail" ng-click="removeRow($index);" style="float: right;" ng-show="maximumAmountOfItems == 0 || maximumAmountOfItems > 1">-</a>        
+    </div>
+    <a href class="btn btn-success btn-add-mail" ng-click="addRow();" ng-show="maximumAmountOfItems == 0 || model.value.length < maximumAmountOfItems">+</a>
+</div>

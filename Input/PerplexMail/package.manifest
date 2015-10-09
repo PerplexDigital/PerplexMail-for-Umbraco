@@ -1,0 +1,56 @@
+{    	
+	propertyEditors:
+	[		
+		{
+			alias: "perplexMailEmailPickerMultiple",
+			name: "PerplexMail - E-mail picker (multiple)",
+			editor: {
+				view: "~/App_Plugins/PerplexMail/EmailPickerMultiple/EmailPickerMultiple.html",
+				hideLabel: false,
+				valueType: "JSON"	
+			},
+			prevalues: {
+				fields: [
+					{
+						label: "Maximum number of items",
+						description: "Enter the maximum number of entries (0 = unlimited)",
+						key: "maximumAmountOfItems",
+						view: 'number',
+						validation: [
+							{
+								type: "Required" 
+							}]
+					}							
+				]
+			},
+			defaultconfig: {
+				maximumAmountOfItems: "0",
+			}
+		},
+		{
+			alias: "perplexMailSendTestEmail",
+			name: "PerplexMail - SendTestEmail",
+			editor: {
+				view: "~/App_Plugins/PerplexMail/SendTestEmail/SendTestEmail.html",
+				hideLabel: false,
+				valueType: "JSON"
+			}
+		},
+		{
+			alias: "perplexMailStatistics",
+			name: "PerplexMail - Statistics",
+			editor: {
+				view: "~/App_Plugins/PerplexMail/Statistics/Statistics.html",
+				hideLabel: true,
+				valueType: "JSON"	
+			}
+		},
+	],
+	javascript: [
+	    "~/App_Plugins/PerplexMail/EmailPickerMultiple/EmailPickerMultiple.controller.js",
+		"~/App_Plugins/PerplexMail/SendTestEmail/SendTestEmail.controller.js",
+		"~/App_Plugins/PerplexMail/Statistics/Statistics.controller.js",
+		"~/App_Plugins/PerplexMail/scripts/dirPaginate.js",		
+		"~/App_Plugins/PerplexMail/scripts/Directives.js",		
+	]
+}  

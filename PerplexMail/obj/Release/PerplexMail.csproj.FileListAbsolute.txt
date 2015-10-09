@@ -1,0 +1,8 @@
+F:\Projecten\PerplexMail\PerplexMail\bin\Release\PerplexMail.dll.config
+F:\Projecten\PerplexMail\PerplexMail\bin\Release\PerplexMail.dll
+F:\Projecten\PerplexMail\PerplexMail\bin\Release\PerplexMail.pdb
+F:\Projecten\PerplexMail\PerplexMail\bin\Release\HtmlAgilityPack.dll
+F:\Projecten\PerplexMail\PerplexMail\bin\Release\HtmlAgilityPack.pdb
+F:\Projecten\PerplexMail\PerplexMail\bin\Release\HtmlAgilityPack.xml
+F:\Projecten\PerplexMail\PerplexMail\obj\Release\PerplexMail.dll
+F:\Projecten\PerplexMail\PerplexMail\obj\Release\PerplexMail.pdb

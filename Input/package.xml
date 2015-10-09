@@ -1,0 +1,823 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<umbPackage>
+  <files />
+  <info>
+    <package>
+      <name>PerplexMail</name>
+      <version>1.0</version>
+      <license url="http://opensource.org/licenses/MIT">MIT License</license>
+      <url>https://www.perplex.nl/umbraco-cms/</url>
+      <requirements>
+        <major>3</major>
+        <minor>0</minor>
+        <patch>0</patch>
+      </requirements>
+    </package>
+    <author>
+      <name>Perplex Internetmarketing B.V.</name>
+      <website>http://www.perplex.nl</website>
+    </author>
+    <readme><![CDATA[]]></readme>
+  </info>
+  <Documents>
+    <DocumentSet importMode="root">
+      <PerplexmailFolder id="1060" parentID="-1" level="1" creatorID="0" sortOrder="0" createDate="2015-07-29T13:55:31" updateDate="2015-07-29T13:55:31" nodeName="PerplexMail" urlName="perplexmail" path="-1,1060" isDoc="" nodeType="1057" creatorName="techniek@perplex.nl" writerName="techniek@perplex.nl" writerID="0" template="0" nodeTypeAlias="PerplexmailFolder">
+        <umbracoNaviHide>0</umbracoNaviHide>
+        <EmailTemplateFolder id="1061" parentID="1060" level="2" creatorID="0" sortOrder="0" createDate="2015-07-29T13:55:45" updateDate="2015-07-29T13:55:45" nodeName="Templates" urlName="templates" path="-1,1060,1061" isDoc="" nodeType="1059" creatorName="techniek@perplex.nl" writerName="techniek@perplex.nl" writerID="0" template="0" nodeTypeAlias="EmailTemplateFolder">
+          <umbracoNaviHide>0</umbracoNaviHide>
+          <EmailTemplate id="1063" parentID="1061" level="3" creatorID="0" sortOrder="0" createDate="2015-07-29T14:14:03" updateDate="2015-07-29T14:14:03" nodeName="Basic template" urlName="basic-template" path="-1,1060,1061,1063" isDoc="" nodeType="1058" creatorName="techniek@perplex.nl" writerName="techniek@perplex.nl" writerID="0" template="0" nodeTypeAlias="EmailTemplate">
+            <umbracoNaviHide>0</umbracoNaviHide>
+            <template><![CDATA[<style>
+/* MEDIA QUERIES > http://zurb.com/ink/docs.php */
+@media only screen and (max-width: 600px) {
+    /* BASIC MOBILE */
+    table[class="body"] img {width: auto !important; height: auto !important; }
+    table[class="body"] center {min-width: 0 !important; }
+    table[class="body"] .container {width: 95% !important;}
+    table[class="body"] .row {width: 100% !important; display: block !important; }
+    table[class="body"] .wrapper {display: block !important; padding-right: 0 !important; }
+    table[class="body"] .columns, table[class="body"] .column {table-layout: fixed !important; float: none !important; width: 100% !important; padding-right: 0px !important; padding-left: 0px !important; display: block !important; }
+    table[class="body"] .wrapper.first .columns, table[class="body"] .wrapper.first .column {display: table !important; }
+    table[class="body"] table.columns td, table[class="body"] table.column td { width: 100% !important;}
+
+    /* MOBILE COLUMNS */
+    table[class="body"] .columns td.one, table[class="body"] .column td.one { width: 8.333333% !important;}
+    table[class="body"] .columns td.two, table[class="body"] .column td.two { width: 16.666666% !important;}
+    table[class="body"] .columns td.three, table[class="body"] .column td.three { width: 25% !important;}
+    table[class="body"] .columns td.four, table[class="body"] .column td.four { width: 33.333333% !important;}
+    table[class="body"] .columns td.five, table[class="body"] .column td.five { width: 41.666666% !important;}
+    table[class="body"] .columns td.six, table[class="body"] .column td.six { width: 50% !important;}
+    table[class="body"] .columns td.seven, table[class="body"] .column td.seven { width: 58.333333% !important;}
+    table[class="body"] .columns td.eight, table[class="body"] .column td.eight { width: 66.666666% !important;}
+    table[class="body"] .columns td.nine, table[class="body"] .column td.nine { width: 75% !important;}
+    table[class="body"] .columns td.ten, table[class="body"] .column td.ten { width: 83.333333% !important;}
+    table[class="body"] .columns td.eleven, table[class="body"] .column td.eleven { width: 91.666666% !important;}
+    table[class="body"] .columns td.twelve, table[class="body"] .column td.twelve { width: 100% !important;}
+
+    /* MOBILE OFFSET */
+    table[class="body"] td.offset-by-one, table[class="body"] td.offset-by-two, table[class="body"] td.offset-by-three, table[class="body"] td.offset-by-four, table[class="body"] td.offset-by-five,
+    table[class="body"] td.offset-by-six, table[class="body"] td.offset-by-seven, table[class="body"] td.offset-by-eight, table[class="body"] td.offset-by-nine, table[class="body"] td.offset-by-ten,
+    table[class="body"] td.offset-by-eleven {padding-left: 0 !important; }
+
+    table[class="body"] table.columns td.expander {width: 1px !important; }
+    table[class="body"] .right-text-pad, table[class="body"] .text-pad-right {padding-left: 10px !important; }
+    table[class="body"] .left-text-pad, table[class="body"] .text-pad-left {padding-right: 10px !important; }
+    table[class="body"] .hide-for-small, table[class="body"] .show-for-desktop {display: none !important; }
+    table[class="body"] .show-for-small, table[class="body"] .hide-for-desktop {display: inherit !important;}
+
+     table[class="body"] .right-text-pad {padding-left: 16px !important; }
+     table[class="body"] .left-text-pad {padding-right: 16px !important; }
+     table[class="body"] .container {width: 92% !important; } 
+     table[class="body"] img {width: 100% !important; }
+}
+</style>
+
+<table class="body">
+    <tr>
+        <td class="center" align="center" valign="top">
+            <center>
+
+                <table class="row header">
+                    <tr>
+                        <td class="center" align="center">
+                            <center>
+                                <table class="container">
+                                    <tr>
+                                        <td class="wrapper last">
+                                            <table class="twelve columns">
+                                                <tr>
+                                                    <td class="six sub-columns"> <img src="http://placehold.it/200x50"> </td>
+                                                    <td class="six sub-columns last" style="text-align:right; vertical-align:middle;">Our newsletter</td>
+                                                    <td class="expander"></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </center>
+                        </td>
+                    </tr>
+                </table>
+
+                <br />
+
+                <table class="container">
+                    <tr>
+                        <td>
+                            <table class="row">
+                                <tr>
+                                    <td class="wrapper last">
+                                        <table class="twelve columns">
+                                            <tr>
+                                                <td>[#content#]</td>
+                                                <td class="expander"></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+            </center>
+        </td>
+    </tr>
+</table>]]></template>
+            <css><![CDATA[/* CLIENT-SPECIFIC STYLES & RESET > http://zurb.com/ink/docs.php */
+#outlook a {padding:0;}
+body{width:100% !important; min-width: 100%; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; margin:0; padding:0;}
+.ExternalClass {width:100%;}
+.ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {line-height: 100%;}
+
+#backgroundTable {margin:0; padding:0; width:100% !important; line-height: 100% !important;}
+img {outline:none; text-decoration:none; -ms-interpolation-mode: bicubic; width: auto; max-width: 100%; float: left; clear: both; display: block;}
+center {width: 100%; min-width: 580px;}
+a img {border: none;}
+p {margin: 0 0 0 10px;}
+table {border-spacing: 0; border-collapse: collapse;}
+td {word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important;}
+table, tr, td {padding: 0; vertical-align: top; text-align: left;}
+hr {color: #d9d9d9; background-color: #d9d9d9; height: 1px; border: none;}
+
+/* RESPONSIVE GRID > http://zurb.com/ink/docs.php */
+table.body {height: 100%; width: 100%;}
+table.container {width: 580px; margin: 0 auto; text-align: inherit; }
+table.row {padding: 0px; width: 100%; position: relative;}
+table.container table.row {display: block; }
+td.wrapper {padding: 10px 20px 0px 0px; position: relative;}
+table.columns, table.column {margin: 0 auto;}
+table.columns td, table.column td {padding: 0px 0px 10px;}
+table.columns td.sub-columns, table.column td.sub-columns, table.columns td.sub-column, table.column td.sub-column {padding-right: 10px;}
+td.sub-column, td.sub-columns {min-width: 0px;}
+td.wrapper.last {padding: 10px 0px 0px 0px;}
+
+/* RESPONSIVE GRID COLUMNS > http://zurb.com/ink/docs.php */
+table.one { width: 30px;} table.two { width: 80px;} table.three { width: 130px;} table.four { width: 180px;} table.five { width: 230px;} table.six { width: 280px;}
+table.seven { width: 330px;} table.eight { width: 380px;} table.nine { width: 430px;} table.ten { width: 480px;} table.eleven { width: 530px;} table.twelve { width: 580px;}
+
+/* RESPONSIVE GRID COLUMNS | CENTER > http://zurb.com/ink/docs.php */
+table.one center { min-width: 30px;} table.two center { min-width: 80px;} table.three center { min-width: 130px;} table.four center { min-width: 180px;}
+table.five center { min-width: 230px;} table.six center { min-width: 280px;} table.seven center { min-width: 330px;} table.eight center { min-width: 380px;}
+table.nine center { min-width: 430px;} table.ten center { min-width: 480px;} table.eleven center { min-width: 530px;} table.twelve center { min-width: 580px;}
+
+/* RESPONSIVE GRID COLUMNS | PANELS > http://zurb.com/ink/docs.php */
+table.one .panel center { min-width: 10px;} table.two .panel center { min-width: 60px;} table.three .panel center { min-width: 110px;} table.four .panel center { min-width: 160px;}
+table.five .panel center { min-width: 210px;} table.six .panel center { min-width: 260px;} table.seven .panel center { min-width: 310px;} table.eight .panel center { min-width: 360px;}
+table.nine .panel center { min-width: 410px;} table.ten .panel center { min-width: 460px;} table.eleven .panel center { min-width: 510px;} table.twelve .panel center { min-width: 560px;}
+
+/* RESPONSIVE GRID COLUMNS | PERCENTAGE > http://zurb.com/ink/docs.php */
+.body .columns td.one, .body .column td.one { width: 8.333333%;}
+.body .columns td.two, .body .column td.two { width: 16.666666%;}
+.body .columns td.three, .body .column td.three { width: 25%;}
+.body .columns td.four, .body .column td.four { width: 33.333333%;}
+.body .columns td.five, .body .column td.five { width: 41.666666%;}
+.body .columns td.six, .body .column td.six { width: 50%;}
+.body .columns td.seven, .body .column td.seven { width: 58.333333%;}
+.body .columns td.eight, .body .column td.eight { width: 66.666666%;}
+.body .columns td.nine, .body .column td.nine { width: 75%;}
+.body .columns td.ten, .body .column td.ten { width: 83.333333%;}
+.body .columns td.eleven, .body .column td.eleven { width: 91.666666%;}
+.body .columns td.twelve, .body .column td.twelve { width: 100%;}
+
+/* GRID OFFSET > http://zurb.com/ink/docs.php */
+td.offset-by-one { padding-left: 50px; } td.offset-by-two { padding-left: 100px; } td.offset-by-three { padding-left: 150px; } td.offset-by-four { padding-left: 200px; } td.offset-by-five { padding-left: 250px; }
+td.offset-by-six { padding-left: 300px; } td.offset-by-seven { padding-left: 350px; } td.offset-by-eight { padding-left: 400px; } td.offset-by-nine { padding-left: 450px; }
+td.offset-by-ten { padding-left: 500px; } td.offset-by-eleven { padding-left: 550px; }
+
+/* GRID OPTIONS > http://zurb.com/ink/docs.php */
+td.expander {visibility: hidden; width: 0px; padding: 0 !important;}
+table.columns .text-pad, table.column .text-pad {padding-left: 10px; padding-right: 10px;}
+table.columns .left-text-pad, table.columns .text-pad-left, table.column .left-text-pad, table.column .text-pad-left {padding-left: 10px;}
+table.columns .right-text-pad, table.columns .text-pad-right, table.column .right-text-pad, table.column .text-pad-right {padding-right: 10px;}
+
+/* BLOCK GRID > http://zurb.com/ink/docs.php */
+.block-grid {width: 100%; max-width: 580px;} .block-grid td {display: inline-block; padding:10px;} .two-up td {width:270px;} .three-up td {width:173px;} .four-up td {width:125px;} .five-up td {width:96px;}
+.six-up td {width:76px;} .seven-up td {width:62px;} .eight-up td {width:52px;}
+
+/* ALIGNMENT & VISIBILITY CLASSES > http://zurb.com/ink/docs.php */
+table.center, td.center {text-align: center;}
+h1.center, h2.center, h3.center, h4.center, h5.center, h6.center {text-align: center;}
+span.center {display: block; width: 100%; text-align: center;}
+img.center {margin: 0 auto; float: none;}
+.show-for-small, .hide-for-desktop {display: none;}
+
+/* TYPOGRAPHY > http://zurb.com/ink/docs.php */
+body, table.body, h1, h2, h3, h4, h5, h6, p, td {color: #222222; font-family: "Helvetica", "Arial", sans-serif; font-weight: normal; padding:0; margin: 0; text-align: left; line-height: 1.3;}
+h1, h2, h3, h4, h5, h6 { word-break: normal;}
+h1 {font-size: 40px;} h2 {font-size: 36px;} h3 {font-size: 32px;} h4 {font-size: 28px;} h5 {font-size: 24px;} h6 {font-size: 20px;}
+body, table.body, p, td {font-size: 14px;line-height:21px;}
+p.lead, p.lede, p.leed {font-size: 18px; line-height:24px;}
+p {margin-bottom: 10px;}
+small {font-size: 10px;}
+
+a {color: #da1f6e; text-decoration: none;}
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {color: #da1f6e;}
+
+/* PANELS > http://zurb.com/ink/docs.php */
+.panel {background: #f2f2f2; border: 1px solid #d9d9d9; padding: 10px !important;}
+.sub-grid table {width: 100%;}
+.sub-grid td.sub-columns {padding-bottom: 0;}
+
+/* BUTTONS > http://zurb.com/ink/docs.php */
+table.button, table.tiny-button, table.small-button, table.medium-button, table.large-button {width: 100%; overflow: hidden;}
+table.button td, table.tiny-button td, table.small-button td, table.medium-button td, table.large-button td {
+display: block; width: auto !important; text-align: center; background: #da1f6e; border: 1px solid #af2564; color: #ffffff; padding: 8px 16px;}
+
+table.button td a, table.tiny-button td a, table.small-button td a, table.medium-button td a, table.large-button td a {font-weight: bold; text-decoration: none; font-family: Helvetica, Arial, sans-serif; color: #ffffff; font-size: 16px;}
+
+/* OUTLOOK FIRST > http://zurb.com/ink/docs.php */
+body.outlook p {display: inline !important; }
+
+.header {background: #da1f6e; }
+.header td {color: #FFF !important;}
+
+.callout .wrapper {padding-bottom: 20px; }
+.callout .panel {background: #fbe8f0; border-color: #f8d2e2; padding: 16px !important; }
+.callout .panel p {margin-bottom: 0;}
+
+.footer .wrapper {background: #ebebeb; padding: 20px 20px 0 0;}
+.footer h5 {padding-bottom: 16px; }
+    
+table.columns .text-pad {padding-left: 16px; padding-right: 16px; }
+table.columns .left-text-pad {padding-left: 16px; }
+table.columns .right-text-pad {padding-right: 16px; }]]></css>
+          </EmailTemplate>
+        </EmailTemplateFolder>
+        <EmailFolder id="1062" parentID="1060" level="2" creatorID="0" sortOrder="1" createDate="2015-07-29T13:56:07" updateDate="2015-08-10T10:14:43" nodeName="E-mails" urlName="e-mails" path="-1,1060,1062" isDoc="" nodeType="1056" creatorName="techniek@perplex.nl" writerName="techniek@perplex.nl" writerID="0" template="0" nodeTypeAlias="EmailFolder">
+          <umbracoNaviHide>0</umbracoNaviHide>
+          <from><![CDATA[[
+  {
+    "Address": "noreply@domain.com",
+    "DisplayName": "Put in your own domain and name"
+  }
+]]]></from>
+          <replyTo><![CDATA[[
+  {}
+]]]></replyTo>
+          <to><![CDATA[[
+  {}
+]]]></to>
+          <cc><![CDATA[[
+  {}
+]]]></cc>
+          <bcc><![CDATA[[
+  {}
+]]]></bcc>
+          <ActionEmail id="1067" parentID="1062" level="3" creatorID="0" sortOrder="0" createDate="2015-07-29T14:15:48" updateDate="2015-08-11T17:40:10" nodeName="Thank you, Perplex!" urlName="thank-you-perplex" path="-1,1060,1062,1067" isDoc="" nodeType="1055" creatorName="techniek@perplex.nl" writerName="techniek@perplex.nl" writerID="0" template="0" nodeTypeAlias="ActionEmail">
+            <umbracoNaviHide>0</umbracoNaviHide>
+            <emailTemplate><![CDATA[1063]]></emailTemplate>
+            <subject><![CDATA[Thank you, Perplex!]]></subject>
+            <body><![CDATA[<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">Dear people from Perplex,</p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">Thanks for creating this awesome package!</p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">I just wanted to test this package, so excuse me for all the spam you are receiving right now!</p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;"><a href="https://www.perplex.nl/umbraco-cms/" target="_blank">Here's a link to your own corporate website www.perplex.nl</a> (not for spam-purposes but to show how the statistics work ;)</p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">{if [#package#] != 'great'}</p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">Your mailpackage s*cks!</p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">{else}</p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">Woehoe! #h5yr!</p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">{/if} </p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;"><a href="/umbraco/[#webversion#]">Show this newsletter in the browser</a></p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">With kind regards,</p>
+<p style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 1; word-spacing: 0px; -webkit-text-stroke-width: 0px;">Perplex Internetmarketing</p>]]></body>
+            <from><![CDATA[[
+  {}
+]]]></from>
+            <replyTo><![CDATA[[
+  {}
+]]]></replyTo>
+            <to><![CDATA[[
+  {
+    "Address": ""
+  }
+]]]></to>
+            <cc><![CDATA[[
+  {}
+]]]></cc>
+            <bcc><![CDATA[[
+  {}
+]]]></bcc>
+            <sendTestEMail><![CDATA[[
+  {
+    "Tag": "package",
+    "Value": "great"
+  }
+]]]></sendTestEMail>
+            <disableAutomatedLogging>0</disableAutomatedLogging>
+          </ActionEmail>
+        </EmailFolder>
+      </PerplexmailFolder>
+    </DocumentSet>
+  </Documents>
+  <DocumentTypes>
+    <DocumentType>
+      <Info>
+        <Name>PerplexMail</Name>
+        <Alias>Perplexmail</Alias>
+        <Icon>.sprTreeFolder</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>The base document type for all e-mail package document types. Contains generic properties.</Description>
+        <AllowAtRoot>False</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <Compositions />
+        <AllowedTemplates />
+        <DefaultTemplate />
+      </Info>
+      <Structure />
+      <GenericProperties>
+        <GenericProperty>
+          <Name>Hide from navigation?</Name>
+          <Alias>umbracoNaviHide</Alias>
+          <Type>Umbraco.TrueFalse</Type>
+          <Definition>92897bc6-a5f3-4ffe-ae27-f2e7e33dda49</Definition>
+          <Tab />
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Internal remarks</Name>
+          <Alias>internalRemarks</Alias>
+          <Type>Umbraco.TextboxMultiple</Type>
+          <Definition>c6bac0dd-4ab9-45b1-8e30-e4b619ee5da3</Definition>
+          <Tab />
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[This tekst is only for internal remarks and is not displayed or used anywhere.]]></Description>
+        </GenericProperty>
+      </GenericProperties>
+      <Tabs />
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>Email base</Name>
+        <Alias>EmailBase</Alias>
+        <Icon>.sprTreeFolder</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description />
+        <AllowAtRoot>False</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <Master>Perplexmail</Master>
+        <Compositions>
+          <Composition>Perplexmail</Composition>
+        </Compositions>
+        <AllowedTemplates />
+        <DefaultTemplate />
+      </Info>
+      <Structure />
+      <GenericProperties>
+        <GenericProperty>
+          <Name>Email template</Name>
+          <Alias>emailTemplate</Alias>
+          <Type>Umbraco.MultiNodeTreePicker</Type>
+          <Definition>72434fdc-59e2-48f8-b3b2-58f528b36da5</Definition>
+          <Tab>Content</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[Select the template that this e-mail will use for basic layout and content.
+
+Take note that you can only select published templates]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Subject</Name>
+          <Alias>subject</Alias>
+          <Type>Umbraco.Textbox</Type>
+          <Definition>0cc0eba1-9960-42c9-bf9b-60e150b429ae</Definition>
+          <Tab>Content</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Body</Name>
+          <Alias>body</Alias>
+          <Type>Umbraco.TinyMCEv3</Type>
+          <Definition>ca90c950-0aff-4e72-b976-a30b1ac57dad</Definition>
+          <Tab>Content</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Attachments</Name>
+          <Alias>attachments</Alias>
+          <Type>Umbraco.MultipleMediaPicker</Type>
+          <Definition>7e3962cc-ce20-4ffc-b661-5897a894ba7e</Definition>
+          <Tab>Content</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Text version</Name>
+          <Alias>textVersion</Alias>
+          <Type>Umbraco.TextboxMultiple</Type>
+          <Definition>c6bac0dd-4ab9-45b1-8e30-e4b619ee5da3</Definition>
+          <Tab>Alternate (text) version</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[(Optional) Provide an alternate text-only (non-HTML) version of your e-mail that is read by recipient devices that do not support complex HTML.]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>From</Name>
+          <Alias>from</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>2f614037-e33d-417b-a466-fb7c04df942d</Definition>
+          <Tab>Settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Reply to</Name>
+          <Alias>replyTo</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>40b869d0-fc35-4292-b522-fd91b756580f</Definition>
+          <Tab>Settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>To</Name>
+          <Alias>to</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>40b869d0-fc35-4292-b522-fd91b756580f</Definition>
+          <Tab>Settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>CC</Name>
+          <Alias>cc</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>40b869d0-fc35-4292-b522-fd91b756580f</Definition>
+          <Tab>Settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>BCC</Name>
+          <Alias>bcc</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>40b869d0-fc35-4292-b522-fd91b756580f</Definition>
+          <Tab>Settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Send test e-mail</Name>
+          <Alias>sendTestEMail</Alias>
+          <Type>perplexMailSendTestEmail</Type>
+          <Definition>81a420f3-aa79-4f67-9aa0-ba6abee08335</Definition>
+          <Tab>Send test</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[Enter the recipient's e-mailaddress.
+
+Please take note that test emails will only be sent to the specified receiver here and not to BCC or CC receivers.]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Statistics</Name>
+          <Alias>statistics</Alias>
+          <Type>perplexMailStatistics</Type>
+          <Definition>c8c85339-840c-4542-874c-728d7d1a1071</Definition>
+          <Tab>Statistics</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Disable automated logging</Name>
+          <Alias>disableAutomatedLogging</Alias>
+          <Type>Umbraco.TrueFalse</Type>
+          <Definition>92897bc6-a5f3-4ffe-ae27-f2e7e33dda49</Definition>
+          <Tab>Logging</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Log expiration</Name>
+          <Alias>logExpiration</Alias>
+          <Type>Umbraco.DropDown</Type>
+          <Definition>45d6ee36-bed6-4b24-b4d8-afc225ff3da5</Definition>
+          <Tab>Logging</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[If this value is left blank, the global (parent's) value will be used instead]]></Description>
+        </GenericProperty>
+      </GenericProperties>
+      <Tabs>
+        <Tab>
+          <Id>12</Id>
+          <Caption>Content</Caption>
+          <SortOrder>0</SortOrder>
+        </Tab>
+        <Tab>
+          <Id>13</Id>
+          <Caption>Alternate (text) version</Caption>
+          <SortOrder>1</SortOrder>
+        </Tab>
+        <Tab>
+          <Id>14</Id>
+          <Caption>Settings</Caption>
+          <SortOrder>2</SortOrder>
+        </Tab>
+        <Tab>
+          <Id>15</Id>
+          <Caption>Send test</Caption>
+          <SortOrder>3</SortOrder>
+        </Tab>
+        <Tab>
+          <Id>16</Id>
+          <Caption>Statistics</Caption>
+          <SortOrder>4</SortOrder>
+        </Tab>
+        <Tab>
+          <Id>17</Id>
+          <Caption>Logging</Caption>
+          <SortOrder>5</SortOrder>
+        </Tab>
+      </Tabs>
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>Action email</Name>
+        <Alias>ActionEmail</Alias>
+        <Icon>icon-message-unopened</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description />
+        <AllowAtRoot>False</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <Master>EmailBase</Master>
+        <Compositions>
+          <Composition>EmailBase</Composition>
+        </Compositions>
+        <AllowedTemplates />
+        <DefaultTemplate />
+      </Info>
+      <Structure />
+      <GenericProperties />
+      <Tabs />
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>Email folder</Name>
+        <Alias>EmailFolder</Alias>
+        <Icon>icon-message-unopened</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description />
+        <AllowAtRoot>False</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <Master>Perplexmail</Master>
+        <Compositions>
+          <Composition>Perplexmail</Composition>
+        </Compositions>
+        <AllowedTemplates />
+        <DefaultTemplate />
+      </Info>
+      <Structure>
+        <DocumentType>ActionEmail</DocumentType>
+      </Structure>
+      <GenericProperties>
+        <GenericProperty>
+          <Name>From</Name>
+          <Alias>from</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>2f614037-e33d-417b-a466-fb7c04df942d</Definition>
+          <Tab>Default settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Reply to</Name>
+          <Alias>replyTo</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>40b869d0-fc35-4292-b522-fd91b756580f</Definition>
+          <Tab>Default settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>To</Name>
+          <Alias>to</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>40b869d0-fc35-4292-b522-fd91b756580f</Definition>
+          <Tab>Default settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>CC</Name>
+          <Alias>cc</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>40b869d0-fc35-4292-b522-fd91b756580f</Definition>
+          <Tab>Default settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>BCC</Name>
+          <Alias>bcc</Alias>
+          <Type>perplexMailEmailPickerMultiple</Type>
+          <Definition>40b869d0-fc35-4292-b522-fd91b756580f</Definition>
+          <Tab>Default settings</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Statistics</Name>
+          <Alias>statistics</Alias>
+          <Type>perplexMailStatistics</Type>
+          <Definition>c8c85339-840c-4542-874c-728d7d1a1071</Definition>
+          <Tab>Global statistics</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Log expiration</Name>
+          <Alias>logExpiration</Alias>
+          <Type>Umbraco.DropDown</Type>
+          <Definition>45d6ee36-bed6-4b24-b4d8-afc225ff3da5</Definition>
+          <Tab>Logging</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+      </GenericProperties>
+      <Tabs>
+        <Tab>
+          <Id>18</Id>
+          <Caption>Default settings</Caption>
+          <SortOrder>0</SortOrder>
+        </Tab>
+        <Tab>
+          <Id>19</Id>
+          <Caption>Global statistics</Caption>
+          <SortOrder>1</SortOrder>
+        </Tab>
+        <Tab>
+          <Id>20</Id>
+          <Caption>Logging</Caption>
+          <SortOrder>2</SortOrder>
+        </Tab>
+      </Tabs>
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>Email template</Name>
+        <Alias>EmailTemplate</Alias>
+        <Icon>icon-layout</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description />
+        <AllowAtRoot>False</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <Master>Perplexmail</Master>
+        <Compositions>
+          <Composition>Perplexmail</Composition>
+        </Compositions>
+        <AllowedTemplates />
+        <DefaultTemplate />
+      </Info>
+      <Structure />
+      <GenericProperties>
+        <GenericProperty>
+          <Name>Template</Name>
+          <Alias>template</Alias>
+          <Type>Umbraco.TextboxMultiple</Type>
+          <Definition>c6bac0dd-4ab9-45b1-8e30-e4b619ee5da3</Definition>
+          <Tab>Content</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[Use the tag [#content#] to specify where the content of the e-mail should be rendered]]></Description>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>CSS</Name>
+          <Alias>css</Alias>
+          <Type>Umbraco.TextboxMultiple</Type>
+          <Definition>c6bac0dd-4ab9-45b1-8e30-e4b619ee5da3</Definition>
+          <Tab>Content</Tab>
+          <Mandatory>False</Mandatory>
+          <Validation />
+          <Description><![CDATA[]]></Description>
+        </GenericProperty>
+      </GenericProperties>
+      <Tabs>
+        <Tab>
+          <Id>21</Id>
+          <Caption>Content</Caption>
+          <SortOrder>0</SortOrder>
+        </Tab>
+      </Tabs>
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>Email template folder</Name>
+        <Alias>EmailTemplateFolder</Alias>
+        <Icon>icon-layout</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description />
+        <AllowAtRoot>False</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <Master>Perplexmail</Master>
+        <Compositions>
+          <Composition>Perplexmail</Composition>
+        </Compositions>
+        <AllowedTemplates />
+        <DefaultTemplate />
+      </Info>
+      <Structure>
+        <DocumentType>EmailTemplate</DocumentType>
+      </Structure>
+      <GenericProperties />
+      <Tabs />
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>PerplexMail folder</Name>
+        <Alias>PerplexmailFolder</Alias>
+        <Icon>icon-message</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description />
+        <AllowAtRoot>True</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <Master>Perplexmail</Master>
+        <Compositions>
+          <Composition>Perplexmail</Composition>
+        </Compositions>
+        <AllowedTemplates />
+        <DefaultTemplate />
+      </Info>
+      <Structure>
+        <DocumentType>EmailFolder</DocumentType>
+        <DocumentType>EmailTemplateFolder</DocumentType>
+      </Structure>
+      <GenericProperties />
+      <Tabs />
+    </DocumentType>
+  </DocumentTypes>
+  <Templates />
+  <Stylesheets />
+  <Macros />
+  <DictionaryItems />
+  <Languages />
+  <DataTypes>
+    <DataType Name="PerplexMail - Email editor" Id="perplexMailEmailPickerMultiple" Definition="2f614037-e33d-417b-a466-fb7c04df942d" DatabaseType="Ntext">
+      <PreValues>
+        <PreValue Id="12" Value="1" Alias="maximumAmountOfItems" />
+      </PreValues>
+    </DataType>
+    <DataType Name="PerplexMail - Email picker" Id="Umbraco.MultiNodeTreePicker" Definition="f198274f-da3c-4ed9-8bf1-8adb80a65e20" DatabaseType="Nvarchar">
+      <PreValues>
+        <PreValue Id="13" Value="{&#xD;&#xA;  &quot;type&quot;: &quot;content&quot;,&#xD;&#xA;  &quot;query&quot;: &quot;$root//EmailFolder&quot;&#xD;&#xA;}" Alias="startNode" />
+        <PreValue Id="14" Value="" Alias="filter" />
+        <PreValue Id="15" Value="" Alias="minNumber" />
+        <PreValue Id="16" Value="1" Alias="maxNumber" />
+        <PreValue Id="17" Value="0" Alias="showEditButton" />
+      </PreValues>
+    </DataType>
+    <DataType Name="PerplexMail - Log expiration picker" Id="Umbraco.DropDown" Definition="45d6ee36-bed6-4b24-b4d8-afc225ff3da5" DatabaseType="Nvarchar">
+      <PreValues>
+        <PreValue Id="18" Value="Never expire" Alias="0" />
+        <PreValue Id="19" Value="1 week" Alias="1" />
+        <PreValue Id="20" Value="1 month" Alias="2" />
+        <PreValue Id="21" Value="3 months" Alias="3" />
+        <PreValue Id="22" Value="6 months" Alias="4" />
+        <PreValue Id="23" Value="1 year" Alias="5" />
+      </PreValues>
+    </DataType>
+    <DataType Name="PerplexMail - Multiple email editor" Id="perplexMailEmailPickerMultiple" Definition="40b869d0-fc35-4292-b522-fd91b756580f" DatabaseType="Ntext">
+      <PreValues>
+        <PreValue Id="24" Value="0" Alias="maximumAmountOfItems" />
+      </PreValues>
+    </DataType>
+    <DataType Name="PerplexMail - Send test email" Id="perplexMailSendTestEmail" Definition="81a420f3-aa79-4f67-9aa0-ba6abee08335" DatabaseType="Ntext">
+      <PreValues />
+    </DataType>
+    <DataType Name="PerplexMail - Statistics" Id="perplexMailStatistics" Definition="c8c85339-840c-4542-874c-728d7d1a1071" DatabaseType="Ntext">
+      <PreValues />
+    </DataType>
+    <DataType Name="PerplexMail - Template picker" Id="Umbraco.MultiNodeTreePicker" Definition="72434fdc-59e2-48f8-b3b2-58f528b36da5" DatabaseType="Nvarchar">
+      <PreValues>
+        <PreValue Id="25" Value="{&#xD;&#xA;  &quot;type&quot;: &quot;content&quot;,&#xD;&#xA;  &quot;query&quot;: &quot;$parent/../EMailTemplateFolder&quot;&#xD;&#xA;}" Alias="startNode" />
+        <PreValue Id="26" Value="EMailTemplate" Alias="filter" />
+        <PreValue Id="27" Value="1" Alias="minNumber" />
+        <PreValue Id="28" Value="1" Alias="maxNumber" />
+        <PreValue Id="29" Value="0" Alias="showEditButton" />
+      </PreValues>
+    </DataType>
+  </DataTypes>
+  <Actions>
+    <Action runat="install" alias="InstallPerplexMail" />
+  </Actions>
+</umbPackage>

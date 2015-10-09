@@ -1,0 +1,224 @@
+<link rel="stylesheet" href="/App_Plugins/PerplexMail/style.css">
+
+<div ng-controller="PerplexMailStatistics.Controller" class="perplexMailStatistics mailPackage" ng-init="init();">
+
+    <!-- Loading animation angularJS directive -->
+    <div loading-indicator style="display: none;"></div>
+    
+    <!-- dit is de grijze kop balk -->
+    <div class="container containerGray">
+        <div class="grid">
+            <div class="col-1-3">
+                <div class="item first">
+                    <a href="https://www.perplex.nl/umbraco-cms/?utm_source=PerplexMail&utm_medium=banner&utm_campaign=PerplexMail" target="_blank" class="icon-before">
+                        <svg version="1.1"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"x="0px" y="0px" width="48px" height="61.7px" viewBox="0 0 48 61.7" overflow="scroll" enable-background="new 0 0 48 61.7"xml:space="preserve"> <defs> </defs> <g id="XMLID_34_"> <path id="XMLID_52_" fill="#E72E7B" d="M44.2,34.6c0.1-3.5,1.5-6.5,2.3-10.3c0.5-2.3,2.6-8.5,0.8-10.8c-2.5-3.1-4.2,2-4.5,3.5 c-0.7,3.3-1.5,5.7-2.3,8.4c-0.4,1.3-0.5,3-2,4.1c-2-0.4-1.3-2.9-1.2-4.9c0.3-4.5-0.1-8.4-0.2-13.1C37,9,36.9,2,32.6,4.3 c-1.7,0.9-1.2,3.2-1.1,5.3c0.3,4.6-0.2,7.6-0.3,11.6c0,2,0.6,6.5-1,5.3c-0.7-0.5-0.7-7.8-1.4-12.6c-0.3-2-0.7-4-0.9-6.4 c-0.2-2.8-0.2-9.1-4.5-7c-2.4,1.2-1.5,5.1-1.5,7.2c0.1,5.2,0.1,8.9,1.1,14.2c0.4,1.9,1.6,5.1-1.1,5.5c-1.7-3.5-2.6-7.3-3.7-11.1 c-1.1-3.6-1.2-7.7-3.6-10.7c-4.7-0.6-3.7,4.3-3.4,7.5c0.5,4.7,1.8,8.9,3.2,13.8c1.5,5.5,2.5,10.8,0,14.4C12,39,10,33.9,7.7,31.9 c-1.3-1.1-4.7-3.9-7-2c-1.5,1.3-0.2,3.2,1,5.1c1.9,2.9,4.2,6,5.4,8.6c1.3,2.7,1.6,4.7,3.1,6.9l29.5,0C40.6,45.2,44,40.1,44.2,34.6"/> <g id="XMLID_37_"> <path id="XMLID_51_" fill="#FFFFFF" d="M44.2,40.4c0,1.5-1.2,2.7-2.7,2.7H9.4c-1.5,0-2.7-1.2-2.7-2.7V19c0-1.5,1.2-2.7,2.7-2.7 h32.2c1.5,0,2.7,1.2,2.7,2.7V40.4z"/> <g id="XMLID_38_"> <path id="XMLID_48_" fill="#4C3A35" d="M25.5,35.1L20.8,31L7.6,42.4c0.5,0.5,1.1,0.7,1.8,0.7h32.1c0.7,0,1.4-0.3,1.8-0.7L30.1,31 L25.5,35.1z M25.5,35.1"/> <path id="XMLID_45_" fill="#4C3A35" d="M43.4,17c-0.5-0.5-1.1-0.7-1.8-0.7H9.4c-0.7,0-1.4,0.3-1.8,0.7l17.9,15.4L43.4,17z M43.4,17"/> <path id="XMLID_42_" fill="#4C3A35" d="M6.7,18.7v22.3l13-11L6.7,18.7z M6.7,18.7"/> <path id="XMLID_39_" fill="#4C3A35" d="M31.3,29.9l13,11V18.6L31.3,29.9z M31.3,29.9"/> </g> </g> <path id="XMLID_36_" fill="#E72E7B" d="M10.3,50.4c-1.5-2.1-1.8-4.2-3.1-6.9C5.9,41,3.7,37.9,1.7,35c-1.3-1.9-2.6-3.9-1-5.1 c2.3-1.9,5.7,0.9,7,2c2.3,2,4.2,7.1,6.9,9.3c0,0,7,3.1,7.2,3.1c0.2,0-2.7,4.1-2.7,4.1L10.3,50.4z"/> <path id="XMLID_35_" fill="#4C3A35" d="M34.7,61.7H14.9c-2.5,0-4.5-2-4.5-4.5v0c0-2.5,2-4.5,4.5-4.5h19.9c2.5,0,4.5,2,4.5,4.5v0 C39.2,59.7,37.2,61.7,34.7,61.7z"/> </g> </svg>
+                    </a>
+                    <strong>Search for</strong>
+
+                    <span>
+                        <input id="rblZoeken0" type="radio" ng-model="searchBy" value="{{ enmFilterBy.Receiver }}" checked ng-click="filter.SearchContent = null">
+                        <label for="rblZoeken0">Name/address recipient</label>
+
+                        <input id="rblZoeken1" type="radio" ng-model="searchBy" value="{{ enmFilterBy.Content }}" ng-click="filter.SearchReceiver = null">
+                        <label for="rblZoeken1">Email subject/body</label>
+                    </span>
+
+                    <input type="text" ng-show="searchBy == enmFilterBy.Content" ng-model="filter.SearchContent" placeholder="Search term" />
+                    <input type="text" ng-show="searchBy == enmFilterBy.Receiver" ng-model="filter.SearchReceiver" placeholder="Search term" />
+
+                </div>
+            </div>
+            <div class="col-1-3">
+                <div class="item">
+                    <strong>Filter by date</strong>
+                    <label class="selectLabel">From</label>
+                    <input id="dateFrom" value="{{ filter.FilterDateFrom | date:'dd-MM-yyyy' }}">
+
+                    <br />
+                    <label class="selectLabel tot">To</label>
+                    <input id="dateTo" value="{{ filter.FilterDateTo | date:'dd-MM-yyyy' }}">
+                </div>
+            </div>
+            <div class="col-1-3">
+                <div class="item last">
+                    <strong>Statistics</strong>
+                    <ul class="statsMail">
+                        <li>{{ totalSent }}<span class="titleStats">sent</span></li>
+                        <li>{{ totalRead }}<span class="titleStats">viewed</span></li>
+                        <li>{{ selectionCount }}<span class="titleStats">displayed below</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dit is de header boven de overzichtstabel -->
+    <div class="container">
+        <div class="grid">
+            <div class="col-1-2"> <h1>Email overview</h1> </div>
+            <div class="col-1-2 align-right">
+                <label id="statusFilterLabel">Status filter</label>
+                <select ng-options="status.Key as status.Value for status in enmStatus" ng-model="filter.FilterStatus"></select>
+                <a ng-click="downloadExcel();" class="btn btn-excel">Download Excel</a> 
+            </div>
+        </div>
+    </div>
+
+    <!-- Dummy, only used for the paging functionality, we render the items ourselfs -->
+    <span dir-paginate="email in statistics | itemsPerPage: filter.AmountPerPage" total-items="selectionCount" current-page="filter.CurrentPage"></span>
+    <!-- End dummy -->
+
+    <table border="0" cellpadding="0" cellspacing="0" class="tblStatistieken">
+        <thead>
+            <tr>
+                <th width="25%"><a>Recipient</a></th>
+                <th width="15%"><a>Status</a></th>
+                <th width="20%"><a ng-click="orderBy('emailName');">Email</a></th>
+                <th width="15%"><a ng-click="orderBy('dateSent');">Date</a></th>
+                <th width="20%">View</th>
+            </tr>
+        </thead>
+        <!--   ng-repeat="email in emails" -->
+
+        <tbody ng-repeat="email in statistics">
+            <tr title="#{{ email.id }}">
+                <td>{{ email.to }}</td>
+                <td>
+                    <span ng-repeat="status in email.Status">
+                        <span title="{{ enmStatus[status + 1].Value }}" class="{{ enmStatus[status + 1].CSSClass }}">{{ enmStatus[status + 1].Value }}</span>
+                    </span>
+                </td>
+                <td>{{ email.emailName }}</td>
+                <td>{{ email.dateSent | date : "dd-MM-yyyy HH:mm:ss" }}</td>
+                <td align="right">
+                    <a class="btn btnBekijk" ng-click="showDetails(email);">View</a>
+                    <a class="btn btn-alt" ng-click="toggleResendBlock(email);">Resend</a>
+                    <a class="btn btnBekijk" ng-click="downloadOutlookEmail(email);">Outlook</a>
+                </td>
+            </tr>
+            <tr class="resend" ng-show="email.Resend">
+                <td colspan="5">
+                    <span class="col-1-2"><strong>Check the email and modify the recipient if needed to resend the email.</strong></span>
+                    <span class="col-1-2 align-right">
+                        <label>Email recipient: </label>
+                        <input type="text" ng-model="email.ResendAddress" />
+                        <a class="btn" ng-click="resendMail(email);">Send</a>
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Popup window with the e-mail contents -->
+    <div class="mail-wrapper" ng-click="viewEmail = null;" ng-show="viewEmail != null;">
+        <div class="mail-popup" ng-click="$event.stopPropagation();">
+            <div class="mail-header cf">
+                <a href="#" class="mail-header_close">&#10005;</a>
+                <div class="col-1-2">
+                    <table>
+                        <tr ng-show="viewEmail.emailName"><td><strong>E-mail type</strong></td> <td>{{ viewEmail.emailName }}</td> </tr>
+                        <tr ng-show="viewEmail.to">
+                            <td><strong>Recipient(s)</strong></td>
+                            <td ng-repeat="email in viewEmail.toList">
+                                {{ email }} <br/>
+                            </td>
+                        </tr>
+                        <tr ng-show="viewEmail.cc">
+                            <td><strong>CC recipient(s)</strong></td>
+                            <td ng-repeat="email in viewEmail.ccList">
+                                {{ email }} <br />
+                            </td>
+                        </tr>
+                        <tr ng-show="viewEmail.bcc">
+                            <td><strong>BCC recipient(s)</strong></td>
+                            <td ng-repeat="email in viewEmail.bccList">
+                                {{ email }} <br />
+                            </td>
+                        </tr>
+                        <tr ng-show="viewEmail.from"> <td><strong>From</strong></td> <td>{{ viewEmail.from }}</td> </tr>
+                    </table>
+                </div>
+                <div class="col-1-2">
+                    <table>
+                        <tr ng-show="viewEmail.replyTo"> <td><strong>Reply-to</strong></td> <td>{{ viewEmail.replyTo }}</td> </tr>
+                        <tr ng-show="viewEmail.dateSent"> <td><strong>Date</strong></td> <td>{{ viewEmail.dateSent | date : "dd-MM-yyyy HH:mm:ss" }}</td> </tr>
+                        <tr ng-show="viewEmail.attachmentPreview">
+                            <td><strong>Attachments</strong></td>
+                            <td class="attachments">
+                                <span ng-repeat="attachment in viewEmail.attachmentPreview">
+                                    <a ng-show="attachment.mediaUrl" target="_blank" href="{{ attachment.mediaUrl }}">{{ attachment.name }}</a>
+                                    <a ng-show="!attachment.mediaUrl" ng-click="downloadAttachment(attachment)">{{ attachment.name }}</a>
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-1-1">
+                    <table>
+                        <tr ng-show="viewEmail.specificUrl"> <td><strong>Url</strong></td> <td>{{ viewEmail.specificUrl }}</td> </tr>
+                        <tr>
+                            <td><strong>Subject</strong></td>
+                            <td>{{ viewEmail.subject }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mail-content" ng-bind-html-unsafe="viewEmail.body "></div>
+        </div>
+    </div>
+
+    <!--
+    <div class="bgView" ng-click="viewEmail = null;" ng-show="viewEmail != null;">
+        <div class="view" ng-click="$event.stopPropagation();">
+            <table class="tblMailDetails">
+                <tbody>
+                    <tr>
+                        <td><strong>E-mail:</strong></td>
+                        <td>{{ viewEmail.Name }}</td>
+                        <td>&nbsp;</td>
+                        <td><strong>Tijdstip:</strong></td>
+                        <td>{{ viewEmail.dateSent | date : "dd-MM-yyyy HH:mm:ss" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ontvanger:</strong></td>
+                        <td>{{ viewEmail.to }}</td>
+                        <td>&nbsp;</td>
+                        <td><strong>Afzender:</strong></td>
+                        <td>{{ viewEmail.from }}</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>Vanaf URL:</strong></td>
+                        <td colspan="4">{{ viewEmail.specificUrl }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td colspan="4">
+                            <span ng-repeat="status in viewEmail.Status">
+                                <span title="{{ enmStatus[status + 1].Value }}" class="{ class=" {{ enmStatus[status + 1].CSSClass }} ">{{ enmStatus[status + 1].Value }}</span>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Attachment(s):</strong></td>
+                        <td colspan="4">
+                            <span ng-repeat="attachment in viewEmail.attachmentPreview">
+                                <a href="{{ attachment }}">{{ attachment }}</a>
+                            </span>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Onderwerp:</strong></td>
+                        <td colspan="4"><span class="onderwerpTekst">{{ viewEmail.subject }}</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="emailContent" ng-bind-html="viewEmail.body">
+            </div>
+        </div>
+    </div>-->
+
+    <dir-pagination-controls on-page-change="pageChanged(newPageNumber)"></dir-pagination-controls>
+</div>

@@ -1,0 +1,597 @@
+@import "DatepickerStyle.less"; @import "AjaxLoader.less";
+
+.mail-item { position: relative; padding-right: 42px; width: 100%; max-width: 640px; min-width: 420px;
+	.btn {background-image: none; color: #FFF; text-shadow: none; &:hover {background-image: none; color: #FFF;}}
+	.btn-danger {background-color: #d9534f; border-color: #d43f3a;}
+	.btn-success {background-color: #5cb85c; border-color: #4cae4c;}
+	.btn-primary {background-color: #428bca; border-color: #357ebd;
+		&:hover {background: #357ebd;}
+	}
+	.btn-remove-mail, .btn-add-mail{ padding-left: 0; padding-right: 0; width: 28px; font-family: Arial; font-weight: bold;}
+	.btn-add-mail {position: absolute;right: 0; bottom: 0;}
+	.btn-send[disabled] {background: #f8f8f8 !important; color: #b3b3b3 !important; border: 1px solid #d9d9d9 !important;}
+}
+
+.mail-row {display: block; margin-bottom: 16px;
+	&:last-of-type {margin-bottom: 0;}
+	textarea, input[type="text"], input[type="email"] {margin-right: 1%;}
+}
+
+/* E-mail package */
+@grayLight:#f2f2f2; @gray:#666; @grayDark:#333; @blue:#3e8acc;
+.rounded(@radius: 4px) {-webkit-border-radius: @radius; -moz-border-radius: @radius; border-radius: @radius; }
+
+/* FLOAT COLUMNS */
+[class*='col-'] {float: left;}
+
+/* GRID / CONTENT BLOCKS */
+.grid {width: 100%; margin: 0 auto; &:after {content: ""; display: table; clear: both; } }
+.align-right {text-align: right;}
+/* GRID / 12 COLUMNS */
+.col-1-1 {width: 100%; } .col-2-3, .col-8-12 {width: 66.66%; } .col-1-2, .col-6-12 {width: 50%; } .col-1-3, .col-4-12 {width: 33.33%; } .col-1-4, .col-3-12 {width: 25%; } .col-1-5 {width: 20%; } .col-1-6, .col-2-12 {width: 16.667%; } .col-1-7 {width: 14.28%; } .col-1-8 {width: 12.5%; } .col-1-9 {width: 11.1%; } .col-1-10 {width: 10%; } .col-1-11 {width: 9.09%; } .col-1-12 {width: 8.33% } .col-11-12 {width: 91.66% } .col-10-12 {width: 83.333%; } .col-9-12 {width: 75%; } .col-5-12 {width: 41.66%; } .col-7-12 {width: 58.33% }
+
+
+body {margin: 0; padding: 0;}
+
+.mailPackage {
+    color: @gray;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    margin: 0 -5px;
+    width: auto;
+    display: block;
+    line-height: 1.6;
+
+    h1 {
+        color: @blue;
+        margin: 0;
+        line-height: 1;
+        position: relative;
+        top: 8px;
+        font-size: 25px;
+        font-weight: bold;
+    }
+
+    .container {
+        padding: 1.5% 3%;
+        width: auto;
+    }
+
+    .containerGray {
+        background: @grayLight;
+    }
+
+    select, input {
+        .rounded;
+        border: 1px solid #e6e6e6;
+        padding: 6px 8px;
+        margin: 2px 0 7px 0;
+        color: @gray;
+    }
+
+    input[type="radio"]{
+        margin-top: 11px;
+    }
+
+    label {
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    #statusFilterLabel{
+        margin-top: 8px;
+    }
+
+    .item {
+        border-right: 1px solid #e6e6e6;
+        padding: 0 10%;
+
+        &.first {
+            padding-left: 0;
+        }
+
+        &.last {
+            padding-right: 0;
+            border-right: 0;
+        }
+
+        strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        label {
+            margin-right: 12px;
+            position: relative;
+            top: 8px;
+        }
+
+        input[type="search"] {
+            .rounded;
+            border: 1px solid #e6e6e6;
+            color: @gray;
+            display: block;
+            padding: 8px;
+            width: 100%;
+            margin: 12px 0 0 0;
+        }
+
+        select {
+            .rounded;
+            border: 1px solid #e6e6e6;
+            padding: 4px 6px;
+            margin: 2px -5px 7px 2%;
+            color: @gray;
+        }
+
+        .selectLabel {
+            display: inline-block;
+            padding: 0;
+            min-width: 56px;
+        }
+
+        // .selectLabel.tot {
+        //     margin-right: 21px;
+        // }
+
+        .selectDateList select { width: 100%; }
+
+        .selectDay {
+            width: 20%;
+        }
+
+        .selectMonth {
+            width: 30%;
+        }
+
+        .selectYear {
+            width: 27%;
+        }
+
+        .statsMail {
+            padding: 0;
+            list-style: none;
+            text-align: center;
+
+            li {
+                display: inline-block;
+                width: 33.3%;
+                margin-right: -4px;
+                font-size: 42px;
+                line-height: 1.1;
+                color: @blue;
+                font-weight: bold;
+            }
+
+            .titleStats {
+                display: block;
+                font-size: 12px;
+                color: @gray;
+                font-weight: normal;
+            }
+        }
+    }
+
+    .tblStatistieken {
+        font-size: 13px;
+        width: 100%;
+
+        th {
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th, th a {
+            color: #FFF;
+            font-weight: bold;
+            text-decoration: none;
+            background: @blue;
+        }
+
+            th a {
+                display: block;
+                padding: 12px;
+                cursor: pointer;
+
+                &:hover {
+                    background: @blue + #111;
+                }
+            }
+
+            th:first-child, td:first-child {
+                padding-left: 3%;
+            }
+
+            th:last-child {
+                padding: 12px 3% 12px 12px;
+            }
+
+        td:last-child {
+            padding-right: 3%;
+        }
+
+        td {
+            border-bottom: 1px solid @grayLight;
+        }
+
+        .btn {
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
+
+        [class*='status'] {
+            padding: 8px 10px;
+            font-size: 12px;
+            margin-right: 8px;
+            color: #FFF;
+            .rounded(3px);
+        }
+
+        .statusRed {
+            background: #db524b;
+            cursor: help;
+
+            &:hover {
+                background: #ef5b53;
+            }
+        }
+
+        .statusYellow {
+            background: #f2ae43;
+            cursor: help;
+
+            &:hover {
+                background: #ffb94c;
+            }
+        }
+
+        .statusGreen {
+            background: #58b957;
+            cursor: help;
+
+            &:hover {
+                background: #62cc61;
+            }
+        }
+
+        tr.resend {
+            td {
+                position: relative;
+                background: @gray;
+                color: #FFF;
+                strong {
+                    display: block;
+                    padding-top: 8px;
+                    padding-right: 20px;
+                }
+
+                input {
+                    width: 240px;
+                }
+
+                .btn {
+                    padding-top: 8px;
+                    padding-bottom: 8px;
+                }
+            }
+        }
+
+        tr.showRow {
+            display: table-row;
+        }
+    }
+
+    .tableFooter {
+        background: @grayLight;
+        padding: 20px 3%;
+        margin-top: 24px;
+
+        select {
+            margin: 0;
+            padding: 6px 10px;
+        }
+    }
+
+    .Paginering {
+        display: inline-block;
+        float: right;
+
+        a {
+            display: inline-block;
+            margin-left: 6px;
+            background: #FFF;
+            color: @blue;
+            padding: 6px 12px;
+        }
+
+            a.current {
+                background: @blue;
+                color: #FFF;
+                font-weight: bold;
+            }
+    }
+
+    .btn {
+        background: @blue - #222;
+        padding: 8px 12px;
+        text-decoration: none;
+        margin-right: 8px;
+        color: #FFF;
+        .rounded(3px);
+
+        &:hover {
+            background: @blue;
+            text-decoration: none;
+        }
+
+        &.btn-alt {
+            color: red;
+            background: @grayLight;
+
+            &:hover {
+                background: @grayLight - #222;
+                text-decoration: none;
+            }
+        }
+
+        &.btn-excel {
+            background: #58b957;
+            color: #FFF;
+            margin: 0;
+
+            &:hover {
+                background: #58b957 - #222;
+                text-decoration: none;
+            }
+        }
+    }
+}
+
+.Loading
+{
+    position:absolute;
+    z-index:9999;
+    height:100%;
+    width:100%;
+    background:rgba(1,1,1,0.3);
+    div
+    {
+        text-transform:uppercase;
+        background-color:@blue;
+        border:4px solid white;
+        position:absolute;
+        top:50%;
+        left:50%;
+        margin:-30px -190px;
+        height:60px;
+        line-height:60px;
+        width:380px;
+        font-size:20px;
+        text-align:center;
+        color:white;
+        &:before
+        {
+            content:url('/app_plugins/perplexMail/ajax-loader.gif');
+            margin:13px 20px 0px 0px;
+            vertical-align:top;
+            display:inline-block;
+        }
+    }
+}
+.geenResultaten{width:100%;}
+
+.mailError
+{
+    background-color:#db524b;
+    color:white;
+    position:absolute;
+    right:200px;
+    height:20px;
+    line-height:20px;
+    padding:0px 10px;
+    text-align:center;
+    top:47px;
+    font-weight:bold;
+    border-radius:3px;
+    &:before
+    {
+        content:'';
+        position:relative;
+        top:-24px;
+        left:50%;
+        margin-left:-3px;
+        width: 0; 
+	    height: 0; 
+	    border-left: 5px solid transparent;
+	    border-right: 5px solid transparent;
+	    border-bottom: 5px solid #db524b;
+    }
+}
+
+.bgView {
+    background: rgba(0,0,0,0.3);
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    z-index: 99999;
+
+    .view {
+        position: absolute;
+        top: 56%;
+        left: 60%;
+        height: 95%;
+        width: 1000px;
+        margin: -500px 0px 0px -500px;
+        background-color: white;
+        overflow: scroll;
+
+        
+        .tblMailDetails {
+            width:100%;
+            background-color: white;
+            height: auto; 
+            tr { padding: 0px; }
+
+        }
+
+        .emailContent a {
+            //position: relative;
+
+            &:after {
+                position:absolute;
+                //top:-3px;
+                left:100%;
+                margin-left:10px;
+                background-color:@blue;
+                color:white;
+                height:15px;
+                line-height:15px;
+                font-size:10px;
+                padding:0px 4px;
+                white-space:nowrap;
+                border-radius:3px;
+                z-index:+100;
+                border:1px solid white;
+            }
+        }
+    }
+}
+
+.pagination-list {display: block; text-align: center; list-style: none; padding: 0; margin: 0;
+	li a {text-decoration: none; display: inline-block; padding: 4px 10px; margin-bottom: 0; font-size: 14px; line-height: 20px; color: #000; text-align: center; vertical-align: middle; cursor: pointer; background: #f2f2f2; border: 1px solid #ccc; -webkit-border-radius: 2px; -moz-border-radius: 2px; border-radius: 2px; -webkit-box-shadow: none; box-shadow: none; margin: 0 4px;}
+	li a:hover {background: #003e77; color: #FFF;}
+	li {display: inline-block; }
+	.is-current {background: #2e8aea; border-color: #2e8aea; color: #FFF;}
+}
+
+//  *******************  /Statistics/Statistics.html  ******************* //
+
+.cf:before, .cf:after {
+    content: " ";
+    display: table;
+}
+
+.cf:after {
+    clear: both;
+}
+
+.mail-wrapper
+{
+    z-index:9999;
+    background: rgba(0,0,0,0.8);
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-left:440px;
+    box-sizing:border-box;
+
+    .mail-popup {
+        padding: 0;
+        margin: -320px auto 0 auto;
+        font-family: "Open Sans";
+        font-size: 13px;
+        line-height: 1.6;
+        width: 800px;
+        height: 640px;
+        background: #FFF;
+        position:relative;
+        top:50%;
+        //position: absolute;
+        //top: -9999px;
+        //bottom: -9999px;
+        //left: -9999px;
+        //right: -9999px;
+        overflow-y: scroll;
+        overflow-x:hidden;
+    }
+
+    .mail-header {
+        background: #1d1d1d;
+        color: #FFF;
+        padding: 32px;
+    }
+    .mail-header .attachments{
+        span {
+            display:block;
+        }
+        a {
+            cursor:pointer;
+        }
+    }
+    .mail-header_close {
+        text-decoration: none;
+        position: absolute;
+        top: -64px;
+        right: 0;
+        color: #FFF;
+        font-size: 40px;
+    }
+
+    /* TABLE */
+    .mail-header table {
+        display: block;
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .mail-header table tbody, .mail-header table tr {
+        width: 100%;
+        display: inline-table;
+    }
+
+    .mail-header .col-1-2 table td {
+        padding-right: 24px;
+        vertical-align: top;
+        width: 40%;
+    }
+
+    .mail-header .col-1-2 table td + td {
+        padding-right: 0;
+        width: 60%;
+    }
+
+    .mail-header table a, .mail-header table strong {
+        color: #2e8aea;
+    }
+
+    .mail-header .col-1-1 table td {
+        vertical-align: top;
+        width: 20%;
+        padding-right: 0;
+    }
+
+    .mail-header .col-1-1 table td + td {
+        width: 80%;
+    }
+
+    // Misc
+    .col-1-1 {
+        display: block;
+        clear: both;
+        float: none;
+        width: 100%;
+    }
+
+    .col-1-2 {
+        display: inline-block;
+        float: left;
+        width: 50%;
+    }
+}
+
+
+.icon-before {display: inline-block; height: 100%; width: 48px; float: left; position: relative; left: -16px; margin-right: 16px; padding-top: 32px;
+    svg {width: 48px;}
+}
+
+.controls.controls-row .col-1-3 {width: 40%;}
+.controls.controls-row .col-1-3 + .col-1-3 {width: 30%;}
