@@ -1,6 +1,5 @@
 ﻿using PerplexMail.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Umbraco.Web.BaseRest;
 
@@ -16,11 +15,7 @@ namespace PerplexMail
             try
             {
                 var request = FromBody<SendTestEmailRequest>();
-                
-                var t = new System.Net.Mail.MailAddressCollection();
-                t.Add(request.EmailAddress);
-                PerplexMail.Email.SendUmbracoEmail(request.EmailNodeId, request.Tags, null, null, null, t, null, null);
-                //PerplexMail.Email.SendUmbracoTestEmail(request);
+                PerplexMail.Email.SendUmbracoTestEmail(request);
                 var response = new AjaxResponse { Success = true, Message = "Testmail sent to " + request.EmailAddress };
                 return Helper.ToJSON(response);
             }
@@ -54,6 +49,9 @@ namespace PerplexMail
             {
 
             }
+            if (response != null)
+                foreach (var m in response.Emails)
+                    m.body = null;
 
             return Helper.ToJSON(response);
         }
@@ -61,6 +59,7 @@ namespace PerplexMail
         [RestExtensionMethod(ReturnXml=false)]
         public static string GetLogEmail()
         {
+            if (!IsUmbracoAuthenticated) return null;
             var request = FromBody<LogMailRequest>();
             if (request != null)
             {
@@ -70,11 +69,6 @@ namespace PerplexMail
             }
             else
                 return null;
-        }
-
-        public class LogMailRequest
-        {
-            public int logEmailId { get; set; }
         }
 
         [RestExtensionMethod(ReturnXml=false)]
@@ -118,12 +112,14 @@ namespace PerplexMail
             return null;
         }
 
-        public class DownloadEmailRequest
+        [RestExtensionMethod(ReturnXml = false)]
+        public static string ResetLog()
         {
-            public int logMailid { get; set; }
+            if (!IsUmbracoAuthenticated) return null;
+            var request = FromURI<ResetLogRequest>();
+            Email.DownloadEmail(request.id);
+            return null;
         }
-
-        #region API utilities
 
         static bool IsUmbracoAuthenticated
         {
@@ -191,7 +187,20 @@ namespace PerplexMail
             return result;
         }
 
-        #endregion
+        public class LogMailRequest
+        {
+            public int logEmailId { get; set; }
+        }
+
+        public class DownloadEmailRequest
+        {
+            public int logMailid { get; set; }
+        }
+
+        public class ResetLogRequest
+        {
+            public int id { get; set; }
+        }
     }
 
     //// De onderstaande code is afhankelijk van de MVC library 

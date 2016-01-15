@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -110,7 +111,6 @@ namespace PerplexMail
         public string ip { get; set; }
         public string exception { get; set; }
         public bool isEncrypted { get; set; }
-        public string salt { get; set; }
         public DateTime viewed { get; set; }
         public int views { get; set; }
         public DateTime webversion { get; set; }
@@ -146,11 +146,10 @@ namespace PerplexMail
             try
             {
                 string result = String.Empty;
-                string query = "SELECT COUNT(*) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] p WHERE [id] IN (SELECT DISTINCT [emailID] FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] s WHERE p.[id] = s.[emailID] AND s.[action] IS NOT NULL)";
                 if (currentEmailTemplateId > 0)
-                    result = Sql.ExecuteSql(query + " AND p.[emailID] = @emailID", CommandType.Text, new SqlParameter("@emailID", currentEmailTemplateId));
+                    result = Sql.ExecuteSql(Constants.SQL_QUERY_GET_VIEWCOUNT_BYTYPE, CommandType.Text, new { emailID = currentEmailTemplateId });
                 else
-                    result = Sql.ExecuteSql(query, CommandType.Text);
+                    result = Sql.ExecuteSql(Constants.SQL_QUERY_GET_VIEWCOUNT, CommandType.Text);
                 int tmp = 0;
                 int.TryParse(result, out tmp);
                 return tmp;
@@ -166,11 +165,10 @@ namespace PerplexMail
             try
             {
                 string result = String.Empty;
-                string query = "SELECT COUNT(*) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "]";
                 if (currentEmailTemplateId > 0)
-                    result = Sql.ExecuteSql(query + " WHERE [emailID] = @templateId", CommandType.Text, new SqlParameter("@templateId", currentEmailTemplateId));
+                    result = Sql.ExecuteSql(Constants.SQL_QUERY_SUM_EMAILS_BYTYPE, CommandType.Text, new { templateId = currentEmailTemplateId } );
                 else
-                    result = Sql.ExecuteSql(query, CommandType.Text);
+                    result = Sql.ExecuteSql(Constants.SQL_QUERY_SUM_EMAILS, CommandType.Text);
                 int tmp = 0;
                 int.TryParse(result, out tmp);
                 return tmp;
@@ -184,36 +182,35 @@ namespace PerplexMail
         public static List<LogEmail> Search(GetMailStatisticsRequest request)
         {
             if (request == null) return null; // Lege request? Dan krijg je niks terug!
+            bool retry = true;
             retry:
             try
             {
-                var pars = new List<SqlParameter>();
-                // Voeg de datumrange toe
-                pars.Add(new SqlParameter("fromDate", request.FilterDateFrom));
-                pars.Add(new SqlParameter("toDate", request.FilterDateTo));
-                pars.Add(new SqlParameter("status", (int)request.FilterStatus));
-                if (request.CurrentNodeId > 0)
-                    pars.Add(new SqlParameter("emailID", request.CurrentNodeId));
-                else
-                    pars.Add(new SqlParameter("emailID", DBNull.Value));
-                pars.Add(new SqlParameter("orderBy", request.OrderBy));
-                pars.Add(new SqlParameter("receiver", DBNull.Value));
-                pars.Add(new SqlParameter("text", DBNull.Value));
-                
-                var emails = Sql.ExecuteSql<LogEmail>(Constants.SQL_QUERY_GET_STATISTICS, System.Data.CommandType.Text, pars.ToArray());
+                var parameters = new
+                {
+                    fromDate = request.FilterDateFrom,
+                    toDate = request.FilterDateTo,
+                    status = (int)request.FilterStatus,
+                    emailID = request.CurrentNodeId,
+                    orderBy = request.OrderBy,
+                    receiver = "%%",
+                    text = "%%",
+                };
+
+                var emails = Sql.ExecuteSql<LogEmail>(Constants.SQL_QUERY_GET_STATISTICS, System.Data.CommandType.Text, parameters);
 
                 foreach (var email in emails)
                 {
                     // Decrypt some values if the e-mail is encrypted
                     if (email.isEncrypted)
                     {
-                        email.to = Security.Decrypt(email.to, null, email.salt);
-                        email.cc = Security.Decrypt(email.cc, null, email.salt);
-                        email.bcc = Security.Decrypt(email.bcc, null, email.salt);
-                        email.replyTo = Security.Decrypt(email.replyTo, null, email.salt);
-                        email.from = Security.Decrypt(email.from, null, email.salt);
-                        email.body = Security.Decrypt(email.body, null, email.salt);
-                        email.subject = Security.Decrypt(email.subject, null, email.salt);
+                        email.to = Security.Decrypt(email.to);
+                        email.cc = Security.Decrypt(email.cc);
+                        email.bcc = Security.Decrypt(email.bcc);
+                        email.replyTo = Security.Decrypt(email.replyTo);
+                        email.from = Security.Decrypt(email.from);
+                        email.body = Security.Decrypt(email.body);
+                        email.subject = Security.Decrypt(email.subject);
                     }
                 }
 
@@ -229,14 +226,15 @@ namespace PerplexMail
                     emails = emails.Where(x => (!String.IsNullOrEmpty(x.to) && x.to.Contains(request.SearchReceiver)) || // Search TO
                                                (!String.IsNullOrEmpty(x.cc) && x.cc.Contains(request.SearchReceiver)) || // Search CC
                                                (!String.IsNullOrEmpty(x.bcc) && x.bcc.Contains(request.SearchReceiver))).ToList(); // Search BCC
-
                 return emails;
-
             }
-            catch (SqlException ex)
+            catch (DbException ex)
             {
-                if (Helper.HandleSqlException(ex))
+                if (retry && Helper.HandleSqlException(ex))
+                {
+                    retry = false;
                     goto retry;
+                }
                 else
                     throw;
             }
@@ -256,10 +254,8 @@ namespace PerplexMail
         retry:
             try
             {
-                var pars = new List<SqlParameter>();
                 // Voeg de datumrange toe
-                pars.Add(new SqlParameter("id", request.logMailid));
-                string attachments = Sql.ExecuteSql("SELECT [attachment] from [perplexLogMail] WHERE [id] = @id", CommandType.Text, pars.ToArray());
+                string attachments = Sql.ExecuteSql(Constants.SQL_QUERY_GET_ATTACHMENT, CommandType.Text, new { id = request.logMailid });
 
                 if (!String.IsNullOrEmpty(attachments))
                 {
@@ -287,7 +283,7 @@ namespace PerplexMail
                 // File not found :( Report the problem to the client.
                 return "The saved file for this attachment does not exist";
             }
-            catch (SqlException ex)
+            catch (DbException ex)
             {
                 // Database exception. Try and handle the exception
                 if (Helper.HandleSqlException(ex))
@@ -321,7 +317,7 @@ namespace PerplexMail
                 var sbHeader = new StringBuilder("<tr>");
                 // Bouw de response op
                 var sbData = new StringBuilder();
-                int saltColumnNumber = -1, isEncryptedColumnNumber = -1;
+                int isEncryptedColumnNumber = -1;
                 foreach (IDataRecord dr in GetLogMailDataRecords(request))
                 {
                     // Is this the first datarecord we are iterating over?
@@ -337,21 +333,18 @@ namespace PerplexMail
                             // Determine if the current column is an encrypted column
                             columnIsEncrypted[i] = _encryptedColumns.Contains(colName);
                             columnIsIncluded[i] = _includeColumnsForExport.Contains(colName);
-                            // Determine if the isEncrypted and salt columns are present, and if so, which column numbers they have
+                            // Determine if the isEncrypted column is present and what column number it is in
                             if (colName == "isEncrypted")
                                 isEncryptedColumnNumber = i;
-                            else if (colName == "salt")
-                                saltColumnNumber = i;
                             if (columnIsIncluded[i])
-                                // Add the column to our excel header line (we don't want to include the salt or the isEncrypted column in our excel export)
+                                // Add the column to our excel header line (we don't want to include the isEncrypted column in our excel export)
                                 sbHeader.AppendLine("<th>" + colName + "</th>");
 			            }
                         firstRow = false;
                     }
 
-                    // Determine if the column is encrypted, and which salt is used for the record
+                    // Determine if the column is encrypted
                     bool recordIsEncrypted = isEncryptedColumnNumber >= 0 ? dr.GetBoolean(isEncryptedColumnNumber) : false;
-                    string salt = saltColumnNumber >= 0 ? dr.GetString(saltColumnNumber) : null;
 
                     sbData.AppendLine("<tr>");                   
                     
@@ -361,10 +354,10 @@ namespace PerplexMail
                         if (columnIsIncluded[i])
                         {
                             string text = dr.GetValue(i).ToString();
-                            // If the current record is flagged as encrypted AND the current column is an encrypted column AND we have a valid salt...
-                            if (recordIsEncrypted && columnIsEncrypted[i] && !String.IsNullOrEmpty(salt))
+                            // If the current record is flagged as encrypted AND the current column is an encrypted column ...
+                            if (recordIsEncrypted && columnIsEncrypted[i])
                                 // ... then decrypt the column text
-                                text = Security.Decrypt(text, null, salt);
+                                text = Security.Decrypt(text);
                             sbData.AppendLine("<td>&nbsp;" + HttpUtility.HtmlEncode(text) + "&nbsp;</td>");
                         }
                     }
@@ -382,7 +375,7 @@ namespace PerplexMail
                 r.Write(sbResult.ToString());
                 r.End();
             }
-            catch (SqlException ex)
+            catch (DbException ex)
             {
                 if (Helper.HandleSqlException(ex))
                     goto retry;
@@ -393,27 +386,18 @@ namespace PerplexMail
 
         static IEnumerable<IDataRecord> GetLogMailDataRecords(GetMailStatisticsRequest request)
         {
+            var parameters = new
+            {
+                fromDate = request.FilterDateFrom,
+                toDate = request.FilterDateTo,
+                status = (int)request.FilterStatus,
+                emailID = request.CurrentNodeId > 0 ? (object)request.CurrentNodeId : DBNull.Value,
+                text = !String.IsNullOrEmpty(request.SearchContent) && request.SearchContent != "null" ? (object)request.SearchContent : DBNull.Value,
+                receiver = !String.IsNullOrEmpty(request.SearchReceiver) && request.SearchReceiver != "null" ? (object)request.SearchReceiver : DBNull.Value,
+                orderBy = DBNull.Value
+            };
 
-            var pars = new List<SqlParameter>();
-            // Voeg de datumrange toe
-            pars.Add(new SqlParameter("fromDate", request.FilterDateFrom));
-            pars.Add(new SqlParameter("toDate", request.FilterDateTo));
-            pars.Add(new SqlParameter("status", (int)request.FilterStatus));
-            if (request.CurrentNodeId > 0)
-                pars.Add(new SqlParameter("emailID", request.CurrentNodeId));
-            else
-                pars.Add(new SqlParameter("emailID", DBNull.Value));
-            if (!String.IsNullOrEmpty(request.SearchContent) && request.SearchContent != "null")
-                pars.Add(new SqlParameter("text", request.SearchContent));
-            else
-                pars.Add(new SqlParameter("text", DBNull.Value));
-            if (!String.IsNullOrEmpty(request.SearchReceiver) && request.SearchReceiver != "null")
-                pars.Add(new SqlParameter("receiver", request.SearchReceiver));
-            else
-                pars.Add(new SqlParameter("receiver", DBNull.Value));
-            pars.Add(new SqlParameter("orderBy", DBNull.Value));
-
-            return Sql.CreateSqlDataEnumerator(Constants.SQL_QUERY_GET_STATISTICS, System.Data.CommandType.Text, pars.ToArray());
+            return Sql.CreateSqlDataEnumerator(Constants.SQL_QUERY_GET_STATISTICS, System.Data.CommandType.Text, parameters);
         }
 
 
@@ -422,32 +406,32 @@ namespace PerplexMail
             retry:
             try
             {
-                var e = PerplexMail.Sql.ExecuteSql<LogEmail>("SELECT TOP 1 l.*, n.[text] 'emailName' FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] l LEFT JOIN [umbracoNode] n ON l.[emailID] = n.[id] WHERE l.[id] = @id", CommandType.Text, new SqlParameter("id", logEmailId)).FirstOrDefault();
+                var e = PerplexMail.Sql.ExecuteSql<LogEmail>(Constants.SQL_QUERY_GET_LOGMAIL, CommandType.Text, new { id = logEmailId }).FirstOrDefault();
                 if (e != null)
                 {
-                    // TODO: Stat tracking uitzetten bij previews
-                    if (preview)
-                    {
-                        string signature = "?i=" + e.id.ToString(); // <== If this querystring is found anywhere, it's the PerplexMail tracking querystring
-                        // In that case we will supply an extra parameter so the preview does not count towards the view of the e-mail
-                        e.body = e.body.Replace(signature, signature + "&p=1"); // Preview == true, see StatisticsModule.cs regel 97
-                    }
-
                     // Decrypt some values if the e-mail is encrypted
                     if (e.isEncrypted)
                     {
-                        e.to = Security.Decrypt(e.to, null, e.salt);
-                        e.cc = Security.Decrypt(e.cc, null, e.salt);
-                        e.bcc = Security.Decrypt(e.bcc, null, e.salt);
-                        e.replyTo = Security.Decrypt(e.replyTo, null, e.salt);
-                        e.from = Security.Decrypt(e.from, null, e.salt);
-                        e.body = Security.Decrypt(e.body, null, e.salt);
-                        e.subject = Security.Decrypt(e.subject, null, e.salt);
+                        e.to = Security.Decrypt(e.to);
+                        e.cc = Security.Decrypt(e.cc);
+                        e.bcc = Security.Decrypt(e.bcc);
+                        e.replyTo = Security.Decrypt(e.replyTo);
+                        e.from = Security.Decrypt(e.from);
+                        e.body = Security.Decrypt(e.body);
+                        e.subject = Security.Decrypt(e.subject);
+                    }
 
-                        #region Process style elements
-                        // Process all <style> tags: remove all comments and add a container class in front of all CSS selectors.
-                        // This is done so the styles are only applied to the preview and do not wreck our Umbraco layout.
-                        var r = new System.Text.RegularExpressions.Regex("<style>(.*?)<\\/style>", System.Text.RegularExpressions.RegexOptions.Singleline);
+                    if (preview)
+                    {
+                        string signature = "?i=" + e.id.ToString() + "&"; // <== If this querystring is found anywhere, it's the PerplexMail tracking querystring
+                        // Simply remove the ID querystring from all statistic URLs in the HTML, that way the statistics module won't register
+                        e.body = e.body.Replace(signature, "?");
+                    }
+
+                    #region Process style elements
+                    // Process all <style> tags: remove all comments and add a container class in front of all CSS selectors.
+                    // This is done so the styles are only applied to the preview and do not wreck our Umbraco layout.
+                    var r = new System.Text.RegularExpressions.Regex("<style>(.*?)<\\/style>", System.Text.RegularExpressions.RegexOptions.Singleline);
                         foreach (System.Text.RegularExpressions.Match m in r.Matches(e.body))
                         {
                             if (m.Success)
@@ -500,11 +484,10 @@ namespace PerplexMail
                             }
                         }
                         #endregion
-                    }
                 }
                 return e;
             }
-            catch (SqlException ex)
+            catch (DbException ex)
             {
                 if (Helper.HandleSqlException(ex))
                     goto retry;

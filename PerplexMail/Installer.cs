@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.IO;
 using System.Linq;
 using System.Web.Configuration;
 using System.Xml;
@@ -57,19 +55,9 @@ namespace PerplexMail.Installer
                 bool hasChanged = false;
 
                 // Remove AppSettings keys
-                if (!webConfig.AppSettings.Settings.AllKeys.Contains(Constants.WEBCONFIG_SETTING_ENCRYPTION_PRIVATEKEY))
+                if (!webConfig.AppSettings.Settings.AllKeys.Contains(Constants.WEBCONFIG_SETTING_PERPLEXMAIL_KEY))
                 {
-                    webConfig.AppSettings.Settings.Add(Constants.WEBCONFIG_SETTING_ENCRYPTION_PRIVATEKEY, Security.GeneratePassword(26, Security.EnmStrength.CharsAndNumbers));
-                    hasChanged = true;
-                }
-                if (!webConfig.AppSettings.Settings.AllKeys.Contains(Constants.WEBCONFIG_SETTING_ENCRYPTION_VECTORBYTES))
-                {
-                    webConfig.AppSettings.Settings.Add(Constants.WEBCONFIG_SETTING_ENCRYPTION_VECTORBYTES, Security.GeneratePassword(32, Security.EnmStrength.CharsAndNumbers));
-                    hasChanged = true;
-                }
-                if (!webConfig.AppSettings.Settings.AllKeys.Contains(Constants.WEBCONFIG_SETTING_HASH_PRIVATEKEY))
-                {
-                    webConfig.AppSettings.Settings.Add(Constants.WEBCONFIG_SETTING_HASH_PRIVATEKEY, Security.GeneratePassword(16, Security.EnmStrength.CharsAndNumbers));
+                    webConfig.AppSettings.Settings.Add(Constants.WEBCONFIG_SETTING_PERPLEXMAIL_KEY, Security.GeneratePassword(16, minSpecialCharCount: 0));
                     hasChanged = true;
                 }
                 if (!webConfig.AppSettings.Settings.AllKeys.Contains(Constants.WEBCONFIG_SETTING_DISABLE_LOG))
@@ -142,19 +130,9 @@ namespace PerplexMail.Installer
                 bool hasChanged = false;
 
                 // Remove AppSettings keys
-                if (webConfig.AppSettings.Settings[Constants.WEBCONFIG_SETTING_ENCRYPTION_PRIVATEKEY] != null)
+                if (webConfig.AppSettings.Settings[Constants.WEBCONFIG_SETTING_PERPLEXMAIL_KEY] != null)
                 {
-                    webConfig.AppSettings.Settings.Remove(Constants.WEBCONFIG_SETTING_ENCRYPTION_PRIVATEKEY);
-                    hasChanged = true;
-                }
-                if (webConfig.AppSettings.Settings[Constants.WEBCONFIG_SETTING_ENCRYPTION_VECTORBYTES] != null)
-                {
-                    webConfig.AppSettings.Settings.Remove(Constants.WEBCONFIG_SETTING_ENCRYPTION_VECTORBYTES);
-                    hasChanged = true;
-                }
-                if (webConfig.AppSettings.Settings[Constants.WEBCONFIG_SETTING_HASH_PRIVATEKEY] != null)
-                {
-                    webConfig.AppSettings.Settings.Remove(Constants.WEBCONFIG_SETTING_HASH_PRIVATEKEY);
+                    webConfig.AppSettings.Settings.Remove(Constants.WEBCONFIG_SETTING_PERPLEXMAIL_KEY);
                     hasChanged = true;
                 }
                 if (webConfig.AppSettings.Settings[Constants.WEBCONFIG_SETTING_DISABLE_LOG] != null)
@@ -218,7 +196,35 @@ namespace PerplexMail.Installer
         void CleanUpDatabase()
         {
             // Remove all email package related tables and stored procedures from the database
-            Sql.ExecuteSql(Constants.SQL_QUERY_CLEANUP_DATABASE, System.Data.CommandType.Text);
+            var db = Umbraco.Core.ApplicationContext.Current.DatabaseContext.Database;
+            db.OpenSharedConnection();
+            try
+            {
+                using (var command = db.CreateCommand(db.Connection, Constants.SQL_QUERY_TABLE_EXISTS, new { tblName = Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS }))
+                {
+                    command.CommandType = System.Data.CommandType.Text;
+                    var result = command.ExecuteScalar();
+                    if (result != null && result.ToString() == "1")
+                    {
+                        command.CommandText = "DROP TABLE " + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS;
+                        command.ExecuteNonQuery();
+                    }
+                }
+                using (var command = db.CreateCommand(db.Connection, Constants.SQL_QUERY_TABLE_EXISTS, new { tblName = Constants.SQL_TABLENAME_PERPLEXMAIL_LOG }))
+                {
+                    command.CommandType = System.Data.CommandType.Text;
+                    var result = command.ExecuteScalar();
+                    if (result != null && result.ToString() == "1")
+                    {
+                        command.CommandText = "DROP TABLE " + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG;
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            finally
+            {
+                db.CloseSharedConnection();
+            }
         }
 
         public XmlNode SampleXml()

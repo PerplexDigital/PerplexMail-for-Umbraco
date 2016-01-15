@@ -8,11 +8,12 @@ using System.Net.Mail;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Web;
-using System.Text;
 using System.ComponentModel;
 using System.IO;
 using Microsoft.Win32;
 using umbraco.NodeFactory;
+using System.Data.Common;
+using PerplexMail.Models;
 
 namespace PerplexMail
 {
@@ -477,18 +478,33 @@ namespace PerplexMail
         /// </summary>
         /// <param name="ex">The SQL exception that needs to be handled</param>
         /// <returns>Returns the success if the conflict has been resolved.</returns>
-        public static bool HandleSqlException(SqlException ex)
+        public static bool HandleSqlException(DbException ex)
         {
             // Make sure a maximum of one thread attempts to fix the database at a time.
             lock (_synclock)
             {
-                if (//ex.Number == 2812 || // "Could not find stored procedure 'NAME'."
-                    ex.Number == 208)   // "Invalid object name 'TABLEAME'."
+                // Known errors:
+                // "The specified table does not exist. [ perplexMailLog ]" - SQL CE
+                // "Invalid object name 'TABLEAME'." - SQL
+                if (ex.Message.Contains(Constants.SQL_TABLENAME_PERPLEXMAIL_LOG) ||
+                    ex.Message.Contains(Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS))
                 {
-                    // Confirm that all required SQL database objects are present
-                    Sql.ExecuteSql(Constants.SQL_QUERY_CREATE_TABLE_PERPLEXLOGMAIL, CommandType.Text);
-                    Sql.ExecuteSql(Constants.SQL_QUERY_CREATE_TABLE_PERPLEXMAILSTATISTICS, CommandType.Text);
-                    return true; // Assume all missing objects have been added
+                    try
+                    {
+                        // Confirm whether or not the logging table exists
+                        if (!Sql.DoesSQLTableExist(Constants.SQL_TABLENAME_PERPLEXMAIL_LOG))
+                            // Create the logging table
+                            Sql.ExecuteSql(Constants.SQL_QUERY_CREATE_TABLE_LOG, CommandType.Text);
+                        // Confirm whether or not the statistics table exists
+                        if (!Sql.DoesSQLTableExist(Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS))
+                            // Create the statistics table
+                            Sql.ExecuteSql(Constants.SQL_QUERY_CREATE_TABLE_STATISTICS, CommandType.Text);
+                        return true; // Assume all missing objects have been added
+                    }
+                    catch
+                    {
+                        return false; // Could not create SQL tables
+                    }
                 } // <== Add more exception handling mechanics here
                 else
                     // Unable to solve the problem
@@ -503,7 +519,7 @@ namespace PerplexMail
         /// <returns>An absolute URL to the webversion URL of the email</returns>
         public static string GenerateWebversionUrl(string mailLogId)
         {
-            String authenticationHash = HttpUtility.UrlEncode(Security.GenerateHash(mailLogId.ToString()));
+            String authenticationHash = HttpUtility.UrlEncode(Security.Hash(mailLogId.ToString()));
             return Helper.WebsiteUrl +
                     "?" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + mailLogId.ToString() + // Email ID
                     "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.webversion.ToString() + // The action to be performed (view email online)
@@ -638,6 +654,30 @@ namespace PerplexMail
 
         static DateTime _nextLogCheck;
 
+        static void PurgeOldLogs(int emailId, DateTime purgeDate)
+        {
+            bool retry = true;
+            retry:
+            try
+            {
+                // Create the purge request
+                var parameters = new { emailID = emailId, maximumLogDate = purgeDate };
+                Sql.ExecuteSql(Constants.SQL_QUERY_REMOVE_OLDLOGS, CommandType.Text, parameters);
+
+                // Set the time at which the next purge will take place
+                _nextLogCheck = DateTime.Now.AddHours(1);
+            }
+            catch (DbException sqlEx)
+            {
+                if (retry && HandleSqlException(sqlEx))
+                {
+                    retry = false;
+                    goto retry;
+                }
+                else
+                    throw;
+            }
+        }
         /// <summary>
         /// This function removes all old log entries from the database (as configured in Umbraco).
         /// </summary>
@@ -676,41 +716,13 @@ namespace PerplexMail
                 if (int.TryParse(input, out expirationNumber))
                 {
                     // Determine the timespan type (week, month, year)
-                    string timeParameterName = null;
                     if (expirationSettings.EndsWith("week", StringComparison.OrdinalIgnoreCase))
-                        timeParameterName = "@numberOfWeeks";
-                    else if (expirationSettings.EndsWith("month", StringComparison.OrdinalIgnoreCase))
-                        timeParameterName = "@numberOfMonths";
-                    else if (expirationSettings.EndsWith("year", StringComparison.OrdinalIgnoreCase))
-                        timeParameterName = "@numberOfYears";
-                    // Has the timespan type been determined?
-                    if (!String.IsNullOrEmpty(timeParameterName))
-                    {
-                        bool retry = true;
-                        retry:
-                        try
-                        {
-                            // Create the purge request
-                            var parameters = new List<SqlParameter>();
-                            parameters.Add(new SqlParameter(timeParameterName, expirationNumber));
-                            parameters.Add(new SqlParameter("@emailID", emailId));
-                            Sql.ExecuteSql(Constants.SQL_QUERY_REMOVE_OLDLOGS, CommandType.Text, parameters.ToArray());
-
-                            // Set the time at which the next purge will take place
-                            _nextLogCheck = DateTime.Now.AddHours(1);
-                        }
-                        catch (SqlException sqlEx)
-                        {
-                            if (retry && HandleSqlException(sqlEx))
-                            {
-                                retry = false;
-                                goto retry;
-                            }
-                            else
-                                throw;
-                        }
-
-                    }
+                        PurgeOldLogs(emailId, DateTime.Now.AddDays(expirationNumber * -7));
+                    if (expirationSettings.EndsWith("month", StringComparison.OrdinalIgnoreCase))
+                        PurgeOldLogs(emailId, DateTime.Now.AddMonths(expirationNumber * -1));
+                    if (expirationSettings.EndsWith("year", StringComparison.OrdinalIgnoreCase))
+                        PurgeOldLogs(emailId, DateTime.Now.AddYears(expirationNumber * -1));
+                    _nextLogCheck = DateTime.Now.AddHours(1);
                 }
             }
         }

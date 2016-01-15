@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-
-namespace PerplexMail
+﻿namespace PerplexMail
 {
     /// <summary>
     /// An Enumeration that determines the status of the email that was sent.
@@ -139,24 +134,14 @@ namespace PerplexMail
         public const string TAG_SUFFIX = "#]";
 
         /// <summary>
-        /// The web.config AppSettings key that contains the vectorbytes string to use for logging encryption.
-        /// </summary>
-        public const string WEBCONFIG_SETTING_ENCRYPTION_VECTORBYTES = "perplexMailEncryptionInitVectorBytes";
-
-        /// <summary>
-        /// The web.config AppSettings key that contains the private key string to use for logging encryption.
-        /// </summary>
-        public const string WEBCONFIG_SETTING_ENCRYPTION_PRIVATEKEY = "perplexMailEncryptionKey";
-
-        /// <summary>
         /// The folder that will contain all the attachments to be stored
         /// </summary>
         public const string ATTACHMENTS_FOLDER = "~/App_Data/PerplexMail/";
 
         /// <summary>
-        /// The web.config AppSettings key that contains the private key string to use for hashing.
+        /// The key name of the "secret" AppSettings entry used to encrypt all data for the PerplexMail package.
         /// </summary>
-        public const string WEBCONFIG_SETTING_HASH_PRIVATEKEY = "perplexMailHashKey";
+        public const string WEBCONFIG_SETTING_PERPLEXMAIL_KEY = "PerplexMailMasterKey";
 
         /// <summary>
         /// The web.config AppSettings key that determines if dynamic attachments should be stored.
@@ -184,38 +169,156 @@ namespace PerplexMail
         public const string PERPLEXMAIL_STATISTICSMODULE_CLASS = "PerplexMail.HttpStatisticsModule";
 
         /// <summary>
-        /// SQL query that removes all traces of the PerplexMail package from the database.
+        /// This query returns "1" if a table with the name @tblName exists
         /// </summary>
-        public const string SQL_QUERY_CLEANUP_DATABASE = "IF EXISTS(SELECT '1' FROM INFORMATION_SCHEMA.TABLES  WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = '" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "') DROP TABLE " + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + " IF EXISTS(SELECT '1' FROM INFORMATION_SCHEMA.TABLES  WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = '" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "') DROP TABLE " + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG;
+        public const string SQL_QUERY_TABLE_EXISTS = "SELECT TOP 1 '1' FROM INFORMATION_SCHEMA.TABLES  WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = @tblName";
+
+        /// <summary>
+        /// This query returns "1" if a stored procedure with the name @spName exists
+        /// </summary>
+        public const string SQL_QUERY_SP_EXISTS = "SELECT TOP 1 '1' FROM sys.procedures WHERE name = @spName";
 
         /// <summary>
         /// SQL query which removes all PerplexMail log entries that have expired according to the settings in Umbraco.
         /// </summary>
-        public const string SQL_QUERY_REMOVE_OLDLOGS = "DECLARE @maximumLogDate DATETIME = NULL IF @numberOfWeeks IS NOT NULL SET @maximumLogDate = DATEADD(WEEK, -@numberOfWeeks, GETDATE()) ELSE IF @numberOfMonths IS NOT NULL SET @maximumLogDate = DATEADD(MONTH, -@numberOfMonths, GETDATE()) ELSE IF @numberOfYears IS NOT NULL SET @maximumLogDate = DATEADD(YEAR, -@numberOfYears, GETDATE()) IF @maximumLogDate IS NOT NULL AND @emailID > 0 DELETE [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] WHERE [dateSent] < @maximumLogDate AND [emailID] = @emailID END";
+        public const string SQL_QUERY_REMOVE_OLDLOGS = "DELETE [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] WHERE[dateSent] < @maximumLogDate AND[emailID] = @emailID";
 
         /// <summary>
         /// SQL query that adds an entry to the PerplexMail table.
         /// </summary>
-        public const string SQL_QUERY_LOGMAIL = "INSERT INTO [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] ([to],[from],replyTo,cc,bcc,[subject],[body],alternativeView,attachment,emailID,website,host,userID,specificurl,ip,exception, isEncrypted, salt) VALUES (@to,@from,@replyTo,@cc,@bcc,@subject,@body,@alternativeView,@attachment,@emailID,@website,@host,@userID,@specificurl,@ip,@exception, @isEncrypted, @salt) SELECT SCOPE_IDENTITY()";
+        public const string SQL_QUERY_LOGMAIL = "INSERT INTO [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] ([to],[from],replyTo,cc,bcc,[subject],[body],alternativeView,attachment,emailID,website,host,userID,specificurl,ip,exception, isEncrypted) VALUES (@to,@from,@replyTo,@cc,@bcc,@subject,@body,@alternativeView,@attachment,@emailID,@website,@host,@userID,@specificurl,@ip,@exception, @isEncrypted)";
+
+        /// <summary>
+        /// Gets the log entry for a sent e-mail based on it's id (parameter 'emailName')
+        /// </summary>
+        public const string SQL_QUERY_GET_LOGMAIL = "SELECT TOP 1 l.*, n.[text] AS [emailName] FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] l LEFT JOIN [umbracoNode] n ON l.[emailID] = n.[id] WHERE l.[id] = @id";
+
+        /// <summary>
+        /// Gets the viewcount total for all e-mails.
+        /// </summary>
+        public const string SQL_QUERY_GET_VIEWCOUNT = "SELECT COUNT(*) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] p WHERE [id] IN (SELECT DISTINCT [emailID] FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] s WHERE p.[id] = s.[emailID] AND s.[action] IS NOT NULL)";
+
+        /// <summary>
+        /// Gets the viewcount total for a specific e-mail type (parameter 'emailID')
+        /// </summary>
+        public const string SQL_QUERY_GET_VIEWCOUNT_BYTYPE = SQL_QUERY_GET_VIEWCOUNT + " AND p.[emailID] = @emailID";
+
+        public const string SQL_QUERY_SUM_EMAILS = "SELECT COUNT(*) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "]";
+        public const string SQL_QUERY_SUM_EMAILS_BYTYPE = SQL_QUERY_SUM_EMAILS + " WHERE [emailID] = @templateId";
+        public const string SQL_QUERY_GET_ATTACHMENT = "SELECT [attachment] from [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] WHERE [id] = @id";
 
         /// <summary>
         /// Sql query that gets statistics for the statistics overview page in Umbraco.
         /// </summary>
-        public const string SQL_QUERY_GET_STATISTICS = "SELECT * FROM (SELECT p.[id], p.[to], p.[emailID], p.[dateSent], p.isEncrypted, p.salt, p.[from], p.[replyTo] ,p.[cc] ,p.[bcc] ,p.[subject] ,p.[body], (SELECT MAX(addDate) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] WHERE emailID = p.id AND [action] = 'view') 'viewed', (SELECT MAX(addDate) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] WHERE emailID = p.id AND [action] = 'click') 'clicked', (SELECT MAX(addDate) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] WHERE emailID = p.id AND [action] = 'webversion') 'webversion', p.[exception], CASE WHEN n.[text] IS NULL THEN '-' ELSE n.[text] END 'emailName' FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] p LEFT JOIN [umbracoNode] n ON p.[emailID] = n.[id] WHERE ((@fromDate IS NULL OR @toDate IS NULL) OR (p.[dateSent] between @fromDate AND @toDate)) AND (@receiver IS NULL OR p.[to] LIKE '%' + @receiver + '%' OR p.[cc] like '%' + @receiver + '%' OR p.[bcc] like '%' + @receiver + '%') AND (@text IS NULL OR p.[subject] LIKE '%' + @text + '%' OR p.[body] LIKE '%' + @text + '%') AND (@emailID = p.emailID OR @emailID IS NULL) ) result WHERE @status IS NULL OR @status = -1 OR (@status = 0 AND result.Viewed IS NULL AND result.Clicked IS NULL AND result.Webversion IS NULL and result.exception IS NULL) OR (@status = 1 AND result.exception IS NOT NULL) OR (@status = 2 AND (result.Viewed IS NOT NULL OR result.Clicked IS NOT NULL OR result.Webversion IS NOT NULL)) OR (@status = 3 AND result.Clicked IS NOT NULL) OR (@status = 4 AND result.Webversion IS NOT NULL) ORDER BY CASE WHEN @orderBy = 'dateSent DESC' THEN [dateSent] ELSE NULL END DESC, CASE WHEN @orderBy = 'dateSent ASC' THEN [dateSent] ELSE NULL END ASC, CASE WHEN @orderBy = 'emailName DESC' THEN [emailName] ELSE NULL END DESC, CASE WHEN @orderBy = 'emailName ASC' THEN [emailName] ELSE NULL END ASC";
-
+        public const string SQL_QUERY_GET_STATISTICS =
+@"SELECT 
+	result.*, v.[viewed], c.[clicked], w.[webversion]
+FROM 
+	(SELECT 
+		p.[id], p.[to], p.[emailID], p.[dateSent], p.isEncrypted, p.[from], p.[replyTo] ,p.[cc] ,p.[bcc] ,p.[subject] ,p.[body], p.[exception], 
+		CASE WHEN n.[text] IS NULL THEN '-' ELSE n.[text] END AS [emailName]
+	FROM 
+		[" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + @"] p 
+    LEFT JOIN 
+		[umbracoNode] n 
+	ON 
+		p.[emailID] = n.[id]
+	WHERE 
+		(p.[dateSent] between @fromDate AND @toDate)
+	AND 
+		(@receiver = '%%' OR (p.[to] LIKE @receiver OR p.[cc] LIKE @receiver OR p.[bcc] LIKE @receiver))
+	AND 
+		(@text = '%%' OR (p.[subject] LIKE @text OR p.[body] LIKE @text))
+	AND 
+		(@emailID = 0 OR @emailID = p.emailID)
+	) result 
+LEFT JOIN 
+    (SELECT [emailID], MAX(addDate) AS [viewed] FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + @"] WHERE [action] = 'view' GROUP BY [emailID]) v 
+ON 
+    result.[id] = v.[emailID]
+LEFT JOIN 
+    (SELECT [emailID], MAX(addDate) AS [clicked] FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + @"] WHERE [action] = 'click' GROUP BY [emailID]) c 
+ON 
+    result.[id] = c.[emailID]
+LEFT JOIN 
+    (SELECT [emailID], MAX(addDate) AS [webversion] FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + @"] WHERE [action] = 'webversion' GROUP BY [emailID]) w
+ON 
+    result.[id] = w.[emailID]
+WHERE 
+	(@status = -1)
+OR 
+	(@status = 0 AND v.[viewed] IS NULL AND c.[clicked] IS NULL AND w.[webversion] IS NULL and result.[exception] IS NULL) 
+OR 
+	(@status = 1 AND result.[exception] IS NOT NULL) 
+OR 
+	(@status = 2 AND (v.[viewed] IS NOT NULL OR c.[clicked] IS NOT NULL OR w.[webversion] IS NOT NULL)) 
+OR 
+	(@status = 3 AND c.[clicked] IS NOT NULL)
+OR 
+	(@status = 4 AND w.[webversion] IS NOT NULL) 
+ORDER BY 
+	CASE WHEN @orderBy = 'dateSent DESC' THEN [dateSent] ELSE NULL END DESC, 
+	CASE WHEN @orderBy = 'dateSent ASC' THEN [dateSent] ELSE NULL END ASC, 
+	CASE WHEN @orderBy = 'emailName DESC' THEN [emailName] ELSE NULL END DESC, 
+	CASE WHEN @orderBy = 'emailName ASC' THEN [emailName] ELSE NULL END ASC";
+        /*
+@"SELECT * FROM (SELECT p.[id], p.[to], p.[emailID], p.[dateSent], p.isEncrypted, p.[from], p.[replyTo] ,p.[cc] ,p.[bcc] ,p.[subject] ,p.[body],"
+            //(SELECT MAX(addDate) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + @"] WHERE emailID = p.id AND [action] = 'view') as [viewed],
+            //(SELECT MAX(addDate) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + @"] WHERE emailID = p.id AND [action] = 'click') as [clicked],
+            //(SELECT MAX(addDate) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + @"] WHERE emailID = p.id AND [action] = 'webversion') as [webversion],
+            + @" p.[exception], CASE WHEN n.[text] IS NULL THEN '-' ELSE n.[text] END as [emailName] FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + @"] p 
+            LEFT JOIN [umbracoNode] n ON p.[emailID] = n.[id] WHERE 
+((@fromDate IS NULL OR @toDate IS NULL) OR (p.[dateSent] between @fromDate AND @toDate)) AND (@receiver IS NULL OR p.[to] LIKE '%' + @receiver + '%' OR p.[cc] like '%' + @receiver + '%' OR p.[bcc] like '%' + @receiver + '%') AND (@text IS NULL OR p.[subject] LIKE '%' + @text + '%' OR p.[body] LIKE '%' + @text + '%') AND (@emailID = p.emailID OR @emailID IS NULL) ) result WHERE @status IS NULL OR @status = -1 OR (@status = 0 AND result.Viewed IS NULL AND result.Clicked IS NULL AND result.Webversion IS NULL and result.exception IS NULL) OR (@status = 1 AND result.exception IS NOT NULL) OR (@status = 2 AND (result.Viewed IS NOT NULL OR result.Clicked IS NOT NULL OR result.Webversion IS NOT NULL)) OR (@status = 3 AND result.Clicked IS NOT NULL) OR (@status = 4 AND result.Webversion IS NOT NULL) ORDER BY CASE WHEN @orderBy = 'dateSent DESC' THEN [dateSent] ELSE NULL END DESC, CASE WHEN @orderBy = 'dateSent ASC' THEN [dateSent] ELSE NULL END ASC, CASE WHEN @orderBy = 'emailName DESC' THEN [emailName] ELSE NULL END DESC, CASE WHEN @orderBy = 'emailName ASC' THEN [emailName] ELSE NULL END ASC";
+*/
         /// <summary>
         /// Sql query that inserts an email statistic (event).
         /// </summary>
-        public const string SQL_QUERY_ADD_STATISTICS = "INSERT INTO [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] VALUES (@emailID, @action, @value, GETDATE(), @ip, @useragent)";
+        public const string SQL_QUERY_ADD_STATISTICS = "INSERT INTO [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] (emailID, action, value, addDate, ip, useragent) VALUES (@emailID, @action, @value, GETDATE(), @ip, @useragent)";
 
         /// <summary>
-        /// Sql query that creates a table to store (log) statistics (events) that are triggered from the emails.
+        /// Note: It's not actually possible to get the next ID, we simply make a "guess" what the next ID will be based on the seed + autoincrement value.
+        ///       The query is slightly more complicated due to the fact that if a table is empty the current identity returned defaults to the seed (1) + increment(1) = 2 instead of 1.
         /// </summary>
-        public const string SQL_QUERY_CREATE_TABLE_PERPLEXMAILSTATISTICS = "IF NOT EXISTS(SELECT '1' FROM INFORMATION_SCHEMA.TABLES  WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = '" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "') BEGIN CREATE TABLE [dbo].[" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "]([id] [int] IDENTITY(1,1) NOT NULL, [emailID] [bigint] NOT NULL, [action] [nvarchar](50) NOT NULL, [value] [nvarchar](255) NULL, [addDate] [datetime] NOT NULL, [ip] [nvarchar](30) NOT NULL, [useragent] [nvarchar](1024) NOT NULL, CONSTRAINT [PK_" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] PRIMARY KEY CLUSTERED ([id] ASC )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]) ON [PRIMARY] ALTER TABLE [dbo].[" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] ADD  CONSTRAINT [DF_" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "_addDate]  DEFAULT (getdate()) FOR [addDate] ALTER TABLE [dbo].[" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "]  WITH CHECK ADD  CONSTRAINT [FK_" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "_" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] FOREIGN KEY([emailID]) REFERENCES [dbo].[" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] ([id]) ON DELETE CASCADE ALTER TABLE [dbo].[" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "] CHECK CONSTRAINT [FK_" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + "_" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] END";
+        public const string SQL_QUERY_GET_NEXT_LOGID = "SELECT IDENT_CURRENT('" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "') + CASE WHEN(SELECT COUNT(1) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "]) = 0 THEN 0 ELSE IDENT_INCR('" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "') END";
 
         /// <summary>
-        /// Sql query that creates a table to store (log) emails that are sent out by the PerplexMail package.
+        /// The SQL query to create the PerplexMail logging table
         /// </summary>
-        public const string SQL_QUERY_CREATE_TABLE_PERPLEXLOGMAIL = "IF NOT EXISTS(SELECT '1' FROM INFORMATION_SCHEMA.TABLES  WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = '" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "') BEGIN CREATE TABLE [dbo].[" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "]([id] [bigint] IDENTITY(1,1) NOT NULL, [to] [nvarchar](255) NOT NULL, [from] [nvarchar](255) NOT NULL, [replyTo] [nvarchar](255) NULL, [cc] [nvarchar](255) NULL, [bcc] [nvarchar](255) NULL, [subject] [ntext] NOT NULL, [body] [ntext] NOT NULL, [alternativeView] [ntext] NULL, [attachment] [nvarchar](1000) NULL, [emailID] [int] NULL, [dateSent] [datetime] NOT NULL DEFAULT (getdate()), [website] [nvarchar](100) NOT NULL, [host] [nvarchar](100) NOT NULL, [userID] [nvarchar](100) NOT NULL, [specificUrl] [nvarchar](255) NOT NULL, [ip] [nvarchar](30) NOT NULL, [exception] [nvarchar](4000) NULL, [isEncrypted] [bit] NOT NULL, [salt] [nvarchar](255) NULL, PRIMARY KEY CLUSTERED ([id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY] END";
+        public const string SQL_QUERY_CREATE_TABLE_LOG =
+            @"CREATE TABLE [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + @"] (
+	            [id] [bigint] IDENTITY(1,1) NOT NULL CONSTRAINT [PK_" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + @"] PRIMARY KEY,
+	            [to] [nvarchar](255) NOT NULL,
+	            [from] [nvarchar](255) NOT NULL,
+	            [replyTo] [nvarchar](255) NULL,
+	            [cc] [nvarchar](255) NULL,
+	            [bcc] [nvarchar](255) NULL,
+	            [subject] [ntext] NOT NULL,
+	            [body] [ntext] NOT NULL,
+	            [alternativeView] [ntext] NULL,
+	            [attachment] [nvarchar](1000) NULL,
+	            [emailID] [int] NULL,
+	            [dateSent] [datetime] NOT NULL DEFAULT (getdate()),
+	            [website] [nvarchar](100) NOT NULL,
+	            [host] [nvarchar](100) NOT NULL,
+	            [userID] [nvarchar](100) NOT NULL,
+	            [specificUrl] [nvarchar](255) NOT NULL,
+	            [ip] [nvarchar](30) NOT NULL,
+	            [exception] [nvarchar](4000) NULL,
+	            [isEncrypted] [bit] NOT NULL
+            )";
+
+        /// <summary>
+        /// The SQL query to create the PerplexMail statistics table
+        /// </summary>
+        public const string SQL_QUERY_CREATE_TABLE_STATISTICS =
+            @"CREATE TABLE [" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + @"] (
+	            [id] [int] IDENTITY(1,1) NOT NULL CONSTRAINT [PK_" + Constants.SQL_TABLENAME_PERPLEXMAIL_STATISTICS + @"] PRIMARY KEY,
+	            [emailID] [bigint] NOT NULL REFERENCES [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + @"] ([id]) ON DELETE CASCADE,
+	            [action] [nvarchar](50) NOT NULL,
+	            [value] [nvarchar](255) NULL,
+	            [addDate] [datetime] NOT NULL DEFAULT getdate(),
+	            [ip] [nvarchar](30) NOT NULL,
+	            [useragent] [nvarchar](1024) NOT NULL
+            )";
     }
 }

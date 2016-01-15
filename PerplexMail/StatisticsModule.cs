@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Web;
-using System.Data;
 using System.Data.SqlClient;
-using System.Text.RegularExpressions;
-using System.Net.Mail;
+using System.Data.Common;
+using PerplexMail.Models;
 
 namespace PerplexMail
 {
@@ -33,8 +31,20 @@ namespace PerplexMail
             HttpContext c = ((HttpApplication)sender).Context;
             // Determine if the request has special variables ment for this statistics module
             if (c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID] != null && c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION] != null)
-                // Register event
-                processMailStatistics(c);
+                try
+                {
+                    // Register event
+                    processMailStatistics(c);
+                }
+                catch (System.Threading.ThreadAbortException)
+                {
+                    // Redirecting? No problem!
+                }
+                catch
+                {
+                    if (c.IsDebuggingEnabled)
+                        throw;
+                }
         }
 
         /// <summary>
@@ -70,9 +80,9 @@ namespace PerplexMail
                             if (!String.IsNullOrEmpty(c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_AUTH]))
                             {
                                 // Determine if the requested email exists
-                                string exists = PerplexMail.Sql.ExecuteSql("SELECT COUNT(*) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] WHERE [id] = @id", System.Data.CommandType.Text, new SqlParameter("@id", +id));
+                                string exists = PerplexMail.Sql.ExecuteSql("SELECT COUNT(*) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] WHERE [id] = @id", System.Data.CommandType.Text, new { id = id });
                                 if (exists == "1" && // Does the email exist?
-                                    c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_AUTH] == Security.GenerateHash(id.ToString())) // Check the authentication hash
+                                    Security.ValidateHash(id.ToString(), c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_AUTH])) // Check the authentication hash
                                 {
                                     // Register the webversion view in our database statistics table
                                     registerEvent(c);
@@ -102,40 +112,18 @@ namespace PerplexMail
 
         void registerEvent(HttpContext c)
         {
-            // Indien het NIET een [p]review betreft dan mogen we hem tracken. Als je dus het mailtje bekijkt in Umbraco dan telt de stat niet mee!
-            if (c.Request["p"] != "1")
+            string useragent = c.Request.UserAgent;
+            if (useragent.Length > 255)
+                useragent = useragent.Substring(0, 255);
+            var parameters = new
             {
-                bool retry = true;
-            retry:
-                try
-                {
-                    string useragent = c.Request.UserAgent;
-                    if (useragent.Length > 255)
-                        useragent = useragent.Substring(0, 255);
-                    var parameters = new List<SqlParameter>();
-                    parameters.Add(new SqlParameter("emailID", c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID]));
-                    parameters.Add(new SqlParameter("action", c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION]));
-                    var value = c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_VALUE];
-                    if (!String.IsNullOrEmpty(value))
-                        parameters.Add(new SqlParameter("value", value));
-                    else
-                        parameters.Add(new SqlParameter("value", DBNull.Value));
-                    parameters.Add(new SqlParameter("ip", c.Request.UserHostAddress));
-                    parameters.Add(new SqlParameter("useragent", useragent));
-                    PerplexMail.Sql.ExecuteSql(Constants.SQL_QUERY_ADD_STATISTICS, System.Data.CommandType.Text, parameters.ToArray());
-                }
-                catch (SqlException ex)
-                {
-                    if (retry && Helper.HandleSqlException(ex))
-                    {
-                        retry = false;
-                        // Controleer of de benodigde dingen in de database staan (Tabellen, stored procedures)
-                        goto retry;
-                    }
-                    else
-                        throw;
-                }
-            }
+                emailID = c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID],
+                action = c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION],
+                value = c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_VALUE] ?? String.Empty,
+                ip = c.Request.UserHostAddress,
+                useragent = useragent
+            };
+            PerplexMail.Sql.ExecuteSql(Constants.SQL_QUERY_ADD_STATISTICS, System.Data.CommandType.Text, parameters);
         }
 
         /// <summary>

@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PerplexMail</RootNamespace>
     <AssemblyName>PerplexMail</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,11 +34,11 @@
   <ItemGroup>
     <Reference Include="HtmlAgilityPack, Version=1.4.9.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.4.9\lib\Net45\HtmlAgilityPack.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="interfaces, Version=1.0.5750.18155, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\UmbracoCms.Core.7.3.0\lib\interfaces.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System">
@@ -60,7 +62,11 @@
     </Reference>
     <Reference Include="umbraco, Version=1.0.5750.18164, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\UmbracoCms.Core.7.3.0\lib\umbraco.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Umbraco.Core">
+      <HintPath>..\..\..\Umbraco tests\Umbraco 7.3.4\www\bin\Umbraco.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -82,19 +88,29 @@
     <Compile Include="PerplexMailController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security.cs" />
+    <Compile Include="SecurityDriven.net\AesFactories.cs" />
+    <Compile Include="SecurityDriven.net\CryptoRandom.cs" />
+    <Compile Include="SecurityDriven.net\EtM.cs" />
+    <Compile Include="SecurityDriven.net\HashFactories.cs" />
+    <Compile Include="SecurityDriven.net\HKDF.cs" />
+    <Compile Include="SecurityDriven.net\HMAC2.cs" />
+    <Compile Include="SecurityDriven.net\HMACFactories.cs" />
+    <Compile Include="SecurityDriven.net\PBKDF2.cs" />
+    <Compile Include="SecurityDriven.net\SerializationExtensions.cs" />
+    <Compile Include="SecurityDriven.net\Util.cs" />
     <Compile Include="Sql.cs" />
     <Compile Include="StatisticsModule.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetPath)" "$(SolutionDir)Input\PerplexMail" /Y /S
-xcopy "$(TargetPath)" "$(SolutionDir)Output\" /Y /S</PostBuildEvent>
+    <PostBuildEvent>xcopy "$(TargetPath)" "$(SolutionDir)Output\" /Y /S</PostBuildEvent>
   </PropertyGroup>
-
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

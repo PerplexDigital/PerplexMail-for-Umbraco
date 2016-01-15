@@ -12,6 +12,7 @@ using System.Configuration;
 using PerplexMail.Models;
 using umbraco.NodeFactory;
 using umbraco.interfaces;
+using System.Data.Common;
 
 namespace PerplexMail
 {
@@ -127,6 +128,8 @@ namespace PerplexMail
             }
         }
 
+        static bool _supportsIdent = true;
+        static bool _supportsAutoInc = true;
         /// <summary>
         /// Attempt to predict the next logID this e-mail will get.
         /// Note: This function is not 100% reliable as emails sent simultaniously may result in the email getting a different (higher) log ID.
@@ -134,7 +137,40 @@ namespace PerplexMail
         /// <returns>The log ID of the next email that will be sent</returns>
         string GetNextLogMailId()
         {
-            return Sql.ExecuteSql("SELECT IDENT_CURRENT('" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "') + IDENT_INCR('" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "')", CommandType.Text);
+            
+            if (_supportsIdent)
+                try
+                {
+                    return Sql.ExecuteSql(Constants.SQL_QUERY_GET_NEXT_LOGID, CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    // If the database starts rambling about IDENT_CURRENT, it most likely means we can't use IDENT_CURRENT in our query (for example in SQL CE)
+                    if (ex.Message.Contains("IDENT_CURRENT"))
+                        _supportsIdent = false;
+                }
+
+            if (_supportsAutoInc)
+                try
+                {
+                    // Attempt to pull the information out of the schema
+                    return Sql.ExecuteSql("SELECT AUTOINC_NEXT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "' AND COLUMN_NAME = 'id'", CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    _supportsAutoInc = false;
+                }
+
+            // Do a max value on the column (ugly method)
+            var result = Sql.ExecuteSql("SELECT MAX([id]) + 1 FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "]", CommandType.Text);
+            if (String.IsNullOrEmpty(result))
+            {
+                // The table is empty, just reseed and return the next expected value (1)
+                Sql.ExecuteSql("ALTER TABLE[" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] ALTER COLUMN [id] IDENTITY(1, 1)", CommandType.Text);
+                return "1";
+            }
+            else
+                return result;
         }
 
         public string SmtpHost { get { return _smtp.Host; } set { _smtp.Host = value; } }
@@ -300,7 +336,7 @@ namespace PerplexMail
             ProcessHyperlinks(ref doc, newID);
 
             // Process all images
-            var containsImage = ProcessImages(ref doc);
+            ProcessImages(ref doc);
 
             // Process all specified CSS styles
             if (!String.IsNullOrEmpty(CSS))
@@ -310,29 +346,26 @@ namespace PerplexMail
             // We are done performing all the required HTML magic
             bodyContent = doc.DocumentNode.OuterHtml;
 
-            // Bepaal of er 'Bekijk online' linkjes in het document staan. Deze hebben een speciale URL nodig.
+            // Determine of there are any "view online" hyperlinks in the document. These require a special webversion URL.
             if (bodyContent.Contains(Constants.TEMPLATE_WEBVERSIONURL_TAG))
             {
                 // Generate a simple authentication hash based on the ID of the email
-                String authenticationHash = HttpUtility.UrlEncode(Security.GenerateHash(newID));
+                String authenticationHash = HttpUtility.UrlEncode(Security.Hash(newID));
                 // Replace the webversion tag with the real URL. The client may open the URL and can then see the webversion of the email.
                 bodyContent = bodyContent.Replace(Constants.TEMPLATE_WEBVERSIONURL_TAG, Helper.GenerateWebversionUrl(newID));
             }
 
             #region 3. Place a tracking tag at the bottom of the email. When the image is loaded from the server it will trigger a "view" for the email
-            //if (!containsImage)
-            //{
-                if (Helper.IsStatisticsModuleEnabled)
-                {
-                    //var tag = doc.CreateElement("img");
-                    //tag.Attributes.Add("src", Helper.WebsiteUrl + Constants.STATISTICS_IMAGE + "?&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + newID + "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.view.ToString());
-                    //tag.Attributes.Add("style", "opacity:0"); // Make the tag not "visible", but it still needs to be rendered by the client (else the image won't get loaded) so make sure not to use display:none
-                    //doc.DocumentNode.LastChild.AppendChild(tag);
+            if (Helper.IsStatisticsModuleEnabled)
+            {
+                //var tag = doc.CreateElement("img");
+                //tag.Attributes.Add("src", Helper.WebsiteUrl + Constants.STATISTICS_IMAGE + "?&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + newID + "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.view.ToString());
+                //tag.Attributes.Add("style", "opacity:0"); // Make the tag not "visible", but it still needs to be rendered by the client (else the image won't get loaded) so make sure not to use display:none
+                //doc.DocumentNode.LastChild.AppendChild(tag);
             
-                    string statTracker = "<img style=\"opacity:0;\" src=\"" + Helper.WebsiteUrl + Constants.STATISTICS_IMAGE + "?" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + newID + "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.view.ToString() + "\" />";
-                    bodyContent += statTracker; // Place the stat tracker image at the end
-                }
-            //}
+                string statTracker = "<img style=\"opacity:0;\" src=\"" + Helper.WebsiteUrl + Constants.STATISTICS_IMAGE + "?" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + newID + "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.view.ToString() + "\" />";
+                bodyContent += statTracker; // Place the stat tracker image at the end
+            }
             #endregion
 
             // Parsinc complete
@@ -382,6 +415,9 @@ namespace PerplexMail
                 {
                     var cssSelector = matchCssStyle.Groups["selector"].Value.Trim();
                     var xpathSelector = Helper.CssToXpath(cssSelector);
+                    // Css-psuedo elements are not supported
+                    if (xpathSelector.Contains(':'))
+                        continue;
                     var cssStyle = matchCssStyle.Groups["style"].Value.Trim();
                     // In case multiple selectors of the same style
                     foreach (var subSelector in cssSelector.Split(','))
@@ -484,21 +520,21 @@ namespace PerplexMail
             public string xpath { get; set; }
         }
 
-        static bool ProcessImages(ref HtmlDocument doc)
+        static void ProcessImages(ref HtmlDocument doc)
         {
-            bool containsImage = false;
             // Iterate over all images embedded in the email
             var query = doc.DocumentNode.SelectNodes("//img");
             if (query != null)
                 foreach (HtmlNode image in query)
                 {
-                    containsImage = true;
                     // Does the image have a relative URL (starts with a /)
-                    if (image.Attributes["src"] != null && image.Attributes["src"].Value.StartsWith("/"))
-                        // Convert the URL to an absolute URL (so the image can be loaded from the server)
-                        image.Attributes["src"].Value = Helper.WebsiteUrl + image.Attributes["src"].Value;
+                    if (image.Attributes["src"] != null)
+                    {
+                        if (image.Attributes["src"].Value.StartsWith("/"))
+                            // Convert the URL to an absolute URL (so the image can be loaded from the server)
+                            image.Attributes["src"].Value = Helper.WebsiteUrl + image.Attributes["src"].Value;
+                    }
                 }
-            return containsImage;
         }
 
         static void ProcessHyperlinks(ref HtmlDocument doc, string mailID)
@@ -536,27 +572,35 @@ namespace PerplexMail
 
                         if (!String.IsNullOrEmpty(url))
                         {
-                            // Sometimes the Umbraco RTE (Richtext Editor) has a bad habbit of placing an unnecessery slash '/' at the start of the href value.
-                            // This is because the RTE tries to "make the url valid" by making the URL relative.
-                            // Check if the unnecessery slash is present
-                            if (url.StartsWith("//") || url.StartsWith("/http"))
-                                // Remove it!
-                                url = url.Substring(1);
+                            // Verify the url does not contain a PerplexMail tag (even though this should already have been parsed earlier!)
+                            if (url.Contains(Constants.TAG_PREFIX))
+                                // The hyperlink still contains a PerplexMail tag for some reason. Remove all leading characters before the tag to be sure.
+                                url = url.Substring(url.IndexOf('['));
+                            else
+                            {
+                                // Sometimes the Umbraco RTE (Richtext Editor) has a bad habbit of placing an unnecessery slash '/' at the start of the href value.
+                                // This is because the RTE tries to "make the url valid" by making the URL relative.
+                                // Check if the unnecessery slash is present
+                                if (url.StartsWith("//") || url.StartsWith("/http"))
+                                    // Remove it!
+                                    url = url.Substring(1);
 
-                            // Convert relative URL to absolute URL if required
-                            string absoluteUrl = url;
-                            if (absoluteUrl.Length > 0 && absoluteUrl[0] == '/')
-                                absoluteUrl = Helper.WebsiteUrl + absoluteUrl;
-
-                            // Verify that the HREF value is not a PerplexMail tag (this will still be parsed+replaced later)
-                            if (moduleEnabled && !url.Contains(Constants.TAG_PREFIX) && !url.Contains(Constants.TAG_SUFFIX))
-                                // Build a statistics URL so we can register a click on the URL when it is in the email
-                                absoluteUrl += "?i=" + mailID + // The Log ID of the email
-                                               "&a=" + EnmAction.click.ToString() + // The action is a link CLICK
-                                               "&v=" + HttpUtility.UrlEncode(HttpUtility.HtmlDecode(url)); // Url encode the (final) target URL.
+                                // Is the PerplexMail module enabled?
+                                if (moduleEnabled)
+                                    // Convert the hyperlink URL to first visit our statistics URL, which will then redirect to the final target URL
+                                    url = Helper.WebsiteUrl + "?i=" + mailID + // The Log ID of the email
+                                                              "&a=" + EnmAction.click.ToString() + // The action is a link CLICK
+                                                              "&v=" + HttpUtility.UrlEncode(HttpUtility.HtmlDecode(url)); // Url encode the (final) target URL
+                                else
+                                {
+                                    // The statistics module is not enabled: Make sure we convert relative URL's to absolute URL's by prepending the protocol and the hostname
+                                    if (url.Length > 0 && url[0] == '/')
+                                        url = Helper.WebsiteUrl + url;
+                                }
+                            }
+                            // Place the (modified) url back in the hyperlink
+                            hyperlink.Attributes["href"].Value = url;
                         }
-
-                        hyperlink.Attributes["href"].Value = url;
                     }
                 }
             }
@@ -636,15 +680,12 @@ namespace PerplexMail
                 // Do not log the e-mail
                 return 0;
             bool retry = true;
-        retry:
+            retry:
             try
             {
                 // If the default encryptionkey is set, encrypt some PerplexLogMail values by default
                 bool requiresEncryption = ConfigurationManager.AppSettings[Constants.WEBCONFIG_SETTING_DISABLE_ENCRYPTION] != "true";
 
-                var sqlPars = new List<SqlParameter>();
-
-                string salt = null;
                 string To = this.To.ToString();
                 string From = this.From.ToString();
                 string Subject = this.Subject;
@@ -661,70 +702,47 @@ namespace PerplexMail
                 ReplyTo = ReplyTo ?? String.Empty;
                 CC = CC ?? String.Empty;
                 BCC = BCC ?? String.Empty;
-                
+
                 if (requiresEncryption)
                 {
-                    salt = Security.GeneratePassword(15, Security.EnmStrength.CharsAndNumbers);
                     if (!String.IsNullOrEmpty(To))
-                        To = Security.Encrypt(To, null, salt);
+                        To = Security.Encrypt(To);
                     if (!String.IsNullOrEmpty(From))
-                        From = Security.Encrypt(From, null, salt);
+                        From = Security.Encrypt(From);
                     if (!String.IsNullOrEmpty(Subject))
-                        Subject = Security.Encrypt(Subject, null, salt);
+                        Subject = Security.Encrypt(Subject);
                     if (!String.IsNullOrEmpty(Body))
-                        Body = Security.Encrypt(Body, null, salt);
+                        Body = Security.Encrypt(Body);
                     if (!String.IsNullOrEmpty(ReplyTo))
-                        ReplyTo = Security.Encrypt(ReplyTo, null, salt);
+                        ReplyTo = Security.Encrypt(ReplyTo);
                     if (!String.IsNullOrEmpty(CC))
-                        CC = Security.Encrypt(CC, null, salt);
+                        CC = Security.Encrypt(CC);
                     if (!String.IsNullOrEmpty(BCC))
-                        BCC = Security.Encrypt(BCC, null, salt);
+                        BCC = Security.Encrypt(BCC);
                 }
 
-                sqlPars.Add(new SqlParameter("@to", To));
-                sqlPars.Add(new SqlParameter("@from", From));
-                sqlPars.Add(new SqlParameter("@subject", Subject));
-                sqlPars.Add(new SqlParameter("@body", Body));
-                sqlPars.Add(new SqlParameter("@replyTo", ReplyTo));
-                sqlPars.Add(new SqlParameter("@cc", CC));
-                sqlPars.Add(new SqlParameter("@bcc", BCC));
-
-                if (Attachments.Count > 0)
-                    sqlPars.Add(new SqlParameter("@attachment", SaveAttachmentsAndGenerateStorageString())); // Attachment(s)
-                else
-                    sqlPars.Add(new SqlParameter("@attachment", DBNull.Value)); // Attachment(s)
-                
-                sqlPars.Add(new SqlParameter("@host", _smtp.Host ?? String.Empty)); // Host
-                sqlPars.Add(new SqlParameter("@userID", _smtpUser ?? String.Empty)); // UserId
-                sqlPars.Add(new SqlParameter("@website", System.Web.HttpContext.Current != null ? System.Web.HttpContext.Current.Request.ServerVariables["server_name"] : String.Empty)); // Website
-                sqlPars.Add(new SqlParameter("@specificurl", System.Web.HttpContext.Current != null ? System.Web.HttpContext.Current.Request.ServerVariables["URL"] : String.Empty)); // URL
-                sqlPars.Add(new SqlParameter("@ip", Helper.GetIp())); // IP
-                sqlPars.Add(new SqlParameter("@emailID", EmailId)); // Umbraco Node Id
-                
-                if (!String.IsNullOrEmpty(AlternativeView))
-                    sqlPars.Add(new SqlParameter("@alternativeview", AlternativeView));
-                else
-                    sqlPars.Add(new SqlParameter("@alternativeview", DBNull.Value));
-                if (ex != null) 
-                    if (ex.InnerException != null)
-                        sqlPars.Add(new SqlParameter("@exception", ex.Message + "; " + ex.InnerException.Message));
-                    else
-                        sqlPars.Add(new SqlParameter("@exception", ex.Message));
-                else
-                    sqlPars.Add(new SqlParameter("@exception", DBNull.Value));
-
-                sqlPars.Add(new SqlParameter("@isEncrypted", requiresEncryption));
-                if (String.IsNullOrEmpty(salt))
-                    sqlPars.Add(new SqlParameter("@salt", DBNull.Value));
-                else
-                    sqlPars.Add(new SqlParameter("@salt", salt));
-
-                var result = Sql.ExecuteSql(Constants.SQL_QUERY_LOGMAIL, CommandType.Text, sqlPars.ToArray());
-                int tmp = 0;
-                int.TryParse(result, out tmp);
-                return tmp;
+                var parameters = new {
+                    to = To,
+                    from = From,
+                    subject = Subject,
+                    body = Body,
+                    replyTo = ReplyTo,
+                    cc = CC,
+                    bcc = BCC,
+                    attachment = Attachments.Count > 0 ? SaveAttachmentsAndGenerateStorageString() : "",
+                    host = _smtp.Host ?? String.Empty,
+                    userID = _smtpUser ?? String.Empty,
+                    website = System.Web.HttpContext.Current != null ? System.Web.HttpContext.Current.Request.ServerVariables["server_name"] : String.Empty,
+                    specificurl = System.Web.HttpContext.Current != null ? System.Web.HttpContext.Current.Request.ServerVariables["URL"] : String.Empty,
+                    ip = Helper.GetIp(),
+                    emailID = EmailId,
+                    alternativeView = AlternativeView ?? String.Empty,
+                    exception = ex != null ? ex.InnerException != null ? ex.Message + "; " + ex.InnerException.Message : ex.Message : "",
+                    isEncrypted = requiresEncryption
+                };
+                return Sql.ExecuteSqlWithIdentity(Constants.SQL_QUERY_LOGMAIL, CommandType.Text, parameters);
             }
-            catch (SqlException sqlEx)
+            catch (DbException sqlEx)
             {
                 if (retry && Helper.HandleSqlException(sqlEx))
                 {
@@ -734,6 +752,14 @@ namespace PerplexMail
                 else
                     throw;
             }
+        }
+
+        public static void ClearLog(int emailNodeId = 0)
+        {
+            if (emailNodeId == 0)
+                Sql.ExecuteSql("DELETE " + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG, CommandType.Text);
+            else
+                Sql.ExecuteSql("DELETE " + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + " WHERE [emailID] = @id", CommandType.Text, new { id = emailNodeId });
         }
 
         #region Alle varianten van send e-mail
