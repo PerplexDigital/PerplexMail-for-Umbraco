@@ -67,7 +67,7 @@
   <Import Project="$(MSBuildProjectDirectory)\lib\MSBuildUmbracoTasks\MSBuild.Umbraco.Tasks.targets" />
   <PropertyGroup>
     <MinUmbracoVersion>7.0.0</MinUmbracoVersion>
-    <PackageVersion>$([System.DateTime]::Now.ToString(dd-MM-yy))</PackageVersion>
+    <PackageVersion>$([System.DateTime]::Now.ToString(yyyy-MM-dd))</PackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <InputDir>$(SolutionDir)Input</InputDir>

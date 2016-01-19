@@ -65,7 +65,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Umbraco.Core">
-      <HintPath>..\..\..\Umbraco tests\Umbraco 7.3.4\www\bin\Umbraco.Core.dll</HintPath>
+      <HintPath>..\packages\UmbracoCms.Core.7.3.0\lib\Umbraco.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

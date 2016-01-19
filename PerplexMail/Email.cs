@@ -356,7 +356,7 @@ namespace PerplexMail
             }
 
             #region 3. Place a tracking tag at the bottom of the email. When the image is loaded from the server it will trigger a "view" for the email
-            if (Helper.IsStatisticsModuleEnabled)
+            if (Helper.IsStatisticsModuleEnabled && !IsLoggingDisabled) // Both the module and logging need to be enabled for this feature to work
             {
                 //var tag = doc.CreateElement("img");
                 //tag.Attributes.Add("src", Helper.WebsiteUrl + Constants.STATISTICS_IMAGE + "?&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + newID + "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.view.ToString());
@@ -537,9 +537,9 @@ namespace PerplexMail
                 }
         }
 
-        static void ProcessHyperlinks(ref HtmlDocument doc, string mailID)
+        void ProcessHyperlinks(ref HtmlDocument doc, string mailID)
         {
-            var moduleEnabled = Helper.IsStatisticsModuleEnabled;
+            var moduleEnabled = Helper.IsStatisticsModuleEnabled && !IsLoggingDisabled; // Both the module and logging need to be enabled for this feature to work
 
             // Determine which hyperlinks we will check
             var query = doc.DocumentNode.SelectNodes("//a");
