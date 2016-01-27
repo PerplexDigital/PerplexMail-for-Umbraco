@@ -296,11 +296,12 @@ namespace PerplexMail
         }
 
         static string[] _encryptedColumns = new[] { "to", "from", "replyTo", "cc", "bcc", "subject", "body" };
-        static string[] _includeColumnsForExport = new[] { "id", "emailID", "dateSent", "to", "from", "replyTo", "cc", "bcc", "subject", "body", "exception", "emailName" };
+        static string[] _includeColumnsForExport = new[] { "id", "emailID", "dateSent", "to", "from", "replyTo", "cc", "bcc", "subject", "exception", "emailName" }; // "body",  ==> Excluded body as it's massive and really not necessery in an export (that's what the online view feature is for)
         public static void Download(GetMailStatisticsRequest request)
         {
             if (request == null) 
                 return; // Lege request? Dan krijg je niks terug!
+            bool retry = false;
         retry:
             try
             {
@@ -377,8 +378,11 @@ namespace PerplexMail
             }
             catch (DbException ex)
             {
-                if (Helper.HandleSqlException(ex))
+                if (retry && Helper.HandleSqlException(ex))
+                {
+                    retry = false;
                     goto retry;
+                }
                 else
                     throw;
             }
@@ -392,8 +396,8 @@ namespace PerplexMail
                 toDate = request.FilterDateTo,
                 status = (int)request.FilterStatus,
                 emailID = request.CurrentNodeId > 0 ? (object)request.CurrentNodeId : DBNull.Value,
-                text = !String.IsNullOrEmpty(request.SearchContent) && request.SearchContent != "null" ? (object)request.SearchContent : DBNull.Value,
-                receiver = !String.IsNullOrEmpty(request.SearchReceiver) && request.SearchReceiver != "null" ? (object)request.SearchReceiver : DBNull.Value,
+                text = !String.IsNullOrEmpty(request.SearchContent) && request.SearchContent != "null" ? request.SearchContent : "%%",
+                receiver = !String.IsNullOrEmpty(request.SearchReceiver) && request.SearchReceiver != "null" ? request.SearchReceiver : "%%",
                 orderBy = DBNull.Value
             };
 

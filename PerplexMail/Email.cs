@@ -67,7 +67,28 @@ namespace PerplexMail
                 throw new Exception(String.Format("The specified Umbraco Node with id '{0}' does not exist or is not a valid mail nodde", umbracoEmailNodeId));
             
             Initialize(values);
-            
+
+            // Optional: If SMTP credentials have been entered from Umbraco, use them instead of the default web.config's settings
+            var nEmails = nMail.Parent;
+            var p = nEmails.GetProperty("smtpHost");
+            if (p != null && !String.IsNullOrEmpty(p.Value))
+                _smtp.Host = p.Value;
+            p = nEmails.GetProperty("smtpLogin");
+            if (p != null && !String.IsNullOrEmpty(p.Value))
+            {
+                _smtp.UseDefaultCredentials = false;
+                var c = new System.Net.NetworkCredential();
+                c.UserName = p.Value;
+                p = nEmails.GetProperty("smtpPassword");
+                if (p != null && !String.IsNullOrEmpty(p.Value))
+                    c.Password = p.Value;
+                _smtp.Credentials = c;
+                int port;
+                p = nEmails.GetProperty("smtpPort");
+                if (p != null && int.TryParse(p.Value, out port) && port > 0)
+                    _smtp.Port = port;
+            }
+
             // Default: NO header data or elements
             HeadTag = ""; 
 
