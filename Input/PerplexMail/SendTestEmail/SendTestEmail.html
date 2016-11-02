@@ -1,16 +1,22 @@
 <link rel="stylesheet" href="/App_Plugins/PerplexMail/style.css">
 
 <div ng-controller="SendTestEmailController.Controller" ng-init="init();" class="mail-item">
-	<div class="mail-row">
-    	<input type="text" placeholder="Email address recipient" ng-model="receiver" style="width: 75%;" />
-    	<a href class="btn btn-primary btn-send" ng-click="sendTestEmail(receiver);" ng-disabled="loading">Send</a>
+    <h5>Recipients</h5>
+    <div ng-repeat="recipient in model.value.recipients" class="mail-row">
+        <input type="text" placeholder="Email address recipient" ng-model="recipient.value" style="width: 40%;" />
+        <a class="btn btn-danger" ng-click="removeRecipient($index);">-</a>
+        <button ng-if="$index == model.value.recipients.length - 1" type="button" class="btn btn-success" ng-click="addRecipient();" style="margin-left: 1%;">+</button>
     </div>
 
-    <div ng-repeat="tag in model.value" class="mail-row">
-        <input type="text" style="width: 43%;" ng-model="tag.Tag" placeholder="[#tag#]" />
-        <input type="text" style="width: 43%;" ng-model="tag.Value" placeholder="value" />
-        <a href class="btn btn-danger btn-remove-mail" ng-click="removeRow($index);" style="float: right;">-</a>
+    <h5>Tags</h5>
+    <div ng-repeat="tag in model.value.tags" class="mail-row">
+        <input type="text" style="width: 30%;" ng-model="tag.Tag" placeholder="[#tag#]" />
+        <input type="text" style="width: 50%;" ng-model="tag.Value" placeholder="value" />
+        <a class="btn btn-danger" ng-click="removeTag($index);">-</a>
+        <button ng-if="$index == model.value.tags.length - 1" type="button" class="btn btn-success" ng-click="addTag();" style="margin-left: 1%;">+</button>
     </div>
 
-    <a href class="btn btn-success btn-add-mail" ng-click="addRow();">+</a>
+    <br />
+	
+    <button type="button" class="btn btn-primary btn-send" ng-click="sendTestEmail();" ng-disabled="loading">Send</button>
 </div>

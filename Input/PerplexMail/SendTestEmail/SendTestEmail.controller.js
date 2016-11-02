@@ -1,30 +1,34 @@
 angular.module("umbraco").controller("SendTestEmailController.Controller", function ($scope, assetsService, $http, $routeParams, notificationsService) {
-
-    $scope.receiver = "";
     $scope.loading = false;
 
     $scope.init = function () {
         if ($scope.model.value == null || $scope.model.value == "") {
             // Set default if nothing was set yet
-            $scope.model.value = [];
-        }
+            $scope.model.value = {
+                recipients: [{}],
+                tags: [{}],
+            }
+        } else if ($scope.model.value.constructor.name === 'Array') {
+            // For old versions, $scope.model.value was the array of tags.
+            // We have made $scope.model.value into an object, with a key 'tags', among others.
+            // If we see an old model.value (an Array), transform it into the new format
 
-        if ($scope.model.value.length < 1) {
-            // Add a default value if nothing was available yet
-            $scope.model.value.push({});
+            var tags = $scope.model.value;
+
+            $scope.model.value = {
+                recipients: [{}],
+                tags: tags,
+            };
         }
     };
 
-    $scope.sendTestEmail = function (receiver) {
+    $scope.sendTestEmail = function () {
 
         $scope.loading = true;
-        if (receiver != "") {
-            $http({
-                method: "POST",
-                url: "/base/PerplexMail/SendTestMail", //"/umbraco/backoffice/package/PerplexMail/SendTestMail"
-                data: { EmailAddress: receiver, EmailNodeId: $routeParams.id, Tags: $scope.model.value },
-            }).then(function (response) {
-                // Notify the user 
+        if ($scope.model.value.recipient != "") {
+            $http.post("/base/PerplexMail/SendTestMail?id=" + $routeParams.id, { EmailAddresses: _.pluck($scope.model.value.recipients, 'value'), EmailNodeId: $routeParams.id, Tags: $scope.model.value.tags })
+            .then(function (response) {
+                // Notify the user
                 notificationsService.add({ type: (response.data.Success ? "success" : "error"), headline: response.data.Message });
                 $scope.loading = false;
             }), function (err) {
@@ -35,17 +39,30 @@ angular.module("umbraco").controller("SendTestEmailController.Controller", funct
         }
     }
 
-    $scope.addRow = function () {
-        // Can be uninitialized after a save
-        if ($scope.model.value == "") {
-            $scope.model.value = [];
-        }
+    $scope.addRecipient = function () {
+        $scope.model.value.recipients.push({});
+    }
 
+    $scope.removeRecipient = function (index) {
+        // Laatste element gaan we niet verwijderen, maar leegmaken
+        if ($scope.model.value.recipients.length === 1) {
+            $scope.model.value.recipients = [{}];
+        } else {
+            $scope.model.value.recipients.splice(index, 1);
+        }
+    }
+
+    $scope.addTag = function () {
         // Add an empty value
-        $scope.model.value.push({});
+        $scope.model.value.tags.push({});
     };
 
-    $scope.removeRow = function (index) {
-        $scope.model.value.splice(index, 1);
+    $scope.removeTag = function (index) {
+        // Laatste element gaan we niet verwijderen, maar leegmaken
+        if ($scope.model.value.tags.length === 1) {
+            $scope.model.value.tags = [{}];
+        } else {
+            $scope.model.value.tags.splice(index, 1);
+        }
     };
 });

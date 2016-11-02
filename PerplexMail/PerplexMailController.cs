@@ -16,7 +16,8 @@ namespace PerplexMail
             {
                 var request = FromBody<SendTestEmailRequest>();
                 PerplexMail.Email.SendUmbracoTestEmail(request);
-                var response = new AjaxResponse { Success = true, Message = "Testmail sent to " + request.EmailAddress };
+                string recipients = String.Join(", ", request.MailAddresses.Select(x => x.Address));
+                var response = new AjaxResponse { Success = true, Message = "Testmail sent to " + recipients };
                 return Helper.ToJSON(response);
             }
             catch (Exception ex)
@@ -179,7 +180,7 @@ namespace PerplexMail
                     if (data != null)
                         result = s.Deserialize<T>(data);
                 }
-                
+
             }
             catch
             {
@@ -203,7 +204,7 @@ namespace PerplexMail
         }
     }
 
-    //// De onderstaande code is afhankelijk van de MVC library 
+    //// De onderstaande code is afhankelijk van de MVC library
     //// Namespace ==> using Umbraco.Web.WebApi;
     //// Library ==> PerplexMail\packages\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll
     //[Umbraco.Web.Mvc.PluginController("package")]
@@ -233,10 +234,10 @@ namespace PerplexMail
     //        var response = new MailStatisticsResponse();
 
     //        try
-    //        {            
+    //        {
     //            // Get all emails from the log that meet our search criteria
     //            response.Emails = LogEmail.Search(request);
-                      
+
     //            // Get the statistics
     //            response.TotalSent = LogEmail.GetEmailSendCount(request.CurrentNodeId);
     //            response.TotalRead = LogEmail.GetEmailViewCount(request.CurrentNodeId);

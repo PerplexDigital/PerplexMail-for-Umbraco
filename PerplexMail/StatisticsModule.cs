@@ -80,7 +80,7 @@ namespace PerplexMail
                             if (!String.IsNullOrEmpty(c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_AUTH]))
                             {
                                 // Determine if the requested email exists
-                                string exists = PerplexMail.Sql.ExecuteSql("SELECT COUNT(*) FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] WHERE [id] = @id", System.Data.CommandType.Text, new { id = id });
+                                string exists = PerplexMail.Sql.ExecuteSql("SELECT TOP 1 1 FROM [" + Constants.SQL_TABLENAME_PERPLEXMAIL_LOG + "] WHERE [id] = @id", System.Data.CommandType.Text, new { id = id });
                                 if (exists == "1" && // Does the email exist?
                                     Security.ValidateHash(id.ToString(), c.Request[Constants.STATISTICS_QUERYSTRINGPARAMETER_AUTH])) // Check the authentication hash
                                 {

@@ -34,7 +34,7 @@ namespace PerplexMail
                 if (Helper.IsLoggingGloballyEnabled)
                 {
                     var nMail = new Node(EmailId);
-                    if (nMail.Id > 0 && nMail.NodeTypeAlias == EnmUmbracoDocumentTypeAlias.ActionEmail.ToString())
+                    if (nMail.Id > 0)
                     {
                         var p = nMail.GetProperty(EnmUmbracoPropertyAlias.disableAutomatedLogging.ToString());
                         if (p != null && p.Value == "1")
@@ -63,9 +63,9 @@ namespace PerplexMail
 
             // Validate the specified node
             Node nMail = new Node(umbracoEmailNodeId);
-            if (nMail == null || nMail.Id == 0 || nMail.NodeTypeAlias != EnmUmbracoDocumentTypeAlias.ActionEmail.ToString())
-                throw new Exception(String.Format("The specified Umbraco Node with id '{0}' does not exist or is not a valid mail nodde", umbracoEmailNodeId));
-            
+            if (nMail == null || nMail.Id == 0)
+                throw new Exception(String.Format("The specified Umbraco Node with id '{0}' does not exist", umbracoEmailNodeId));
+
             Initialize(values);
 
             // Optional: If SMTP credentials have been entered from Umbraco, use them instead of the default web.config's settings
@@ -90,7 +90,7 @@ namespace PerplexMail
             }
 
             // Default: NO header data or elements
-            HeadTag = ""; 
+            HeadTag = "";
 
             // Add the email template ID so it will get logged to the DB
             EmailId = nMail.Id;
@@ -144,8 +144,12 @@ namespace PerplexMail
                 // Attempt to load the umbraco node property containing the CSS
                 string CSS = nTemplate.GetProperty(EnmUmbracoPropertyAlias.css);
                 if (!String.IsNullOrEmpty(CSS))
-                    // Place the CSS style code in the header of the e-mail
-                    HeadTag = "<style>" + CSS + "</style>";
+                {
+                    if (IsInlinerDisabled(nMail))
+                        // We are not inlining our CSS, so place the style tag in the header of the e-mail.
+                        // The recipient will have to interpret the stylesheet for the e-mail
+                        HeadTag = "<style>" + CSS + "</style>";
+                }
             }
         }
 
@@ -158,7 +162,7 @@ namespace PerplexMail
         /// <returns>The log ID of the next email that will be sent</returns>
         string GetNextLogMailId()
         {
-            
+
             if (_supportsIdent)
                 try
                 {
@@ -247,27 +251,9 @@ namespace PerplexMail
             _listOfTags = values ?? new List<EmailTag>();
         }
 
-        string ReplaceIfThenElseStatements(string input)
-        {
-            if (!String.IsNullOrEmpty(input) && _listOfTags != null && _listOfTags.Count > 0)
-            {
-                foreach (EmailTag t in _listOfTags)
-                {
-                    bool state;
-                    if (Boolean.TryParse(t.Value, out state))
-                        input = Helper.ReplaceIfThenElseStatements(t.Tag, input, state);
-                }
-                input = Helper.parseIfs(input, _listOfTags); // Parse ala MBFS-calculator
-            }
-            return input;
-        }
-
         string ReplaceTags(string input)
         {
-            if (!String.IsNullOrEmpty(input) && _listOfTags != null && _listOfTags.Count > 0)
-                foreach (EmailTag t in _listOfTags)
-                    input = input.Replace(t.FullTag, t.Value);
-            return input;
+            return Helper.ParseTags(input, _listOfTags);
         }
 
         public class PerplexEmailadres
@@ -291,9 +277,11 @@ namespace PerplexMail
                         {
                             if (!String.IsNullOrEmpty(email.Address))
                             {
-                                m = new MailAddress(ReplaceTags(email.Address), ReplaceTags(email.DisplayName));
+                                var emailaddress = ReplaceTags(email.Address);
+                                if (!String.IsNullOrEmpty(emailaddress) && System.Text.RegularExpressions.Regex.IsMatch(emailaddress, Constants.REGEX_EMAIL))
+                                    m = new MailAddress(emailaddress, ReplaceTags(email.DisplayName));
                             }
-                        }   
+                        }
                         catch { } // "Jammer joh" exception
                         if (m != null)
                         {
@@ -307,6 +295,62 @@ namespace PerplexMail
                     yield return email;
         }
 
+        string GetContentAsGrid(Node nMail)
+        {
+            string gridHTML = null;
+            // Try as grid
+            var pc = Umbraco.Web.UmbracoContext.Current?.ContentCache?.GetById(nMail.Id);
+            string alias = EnmUmbracoPropertyAlias.body.ToString();
+            if (pc != null)
+            {
+                var p = pc.GetProperty(alias);
+                if (p == null)
+                    return null;
+                var model = p.Value;
+                if (model == null)
+                    return null;
+                var cc = new System.Web.Mvc.ControllerContext
+                {
+                    RequestContext = Umbraco.Web.UmbracoContext.Current.HttpContext.Request.RequestContext
+                };
+
+                var viewContext = new System.Web.Mvc.ViewContext(cc, new FakeView(), new System.Web.Mvc.ViewDataDictionary(model), new System.Web.Mvc.TempDataDictionary(), new StringWriter());
+                if (!viewContext.RouteData.Values.ContainsKey("controller"))
+                    viewContext.RouteData.Values.Add("controller", "cheese");
+
+                var htmlHelper = new System.Web.Mvc.HtmlHelper(viewContext, new System.Web.Mvc.ViewPage());
+                gridHTML = Umbraco.Web.GridTemplateExtensions.GetGridHtml(htmlHelper, pc, alias).ToHtmlString();
+            }
+            return gridHTML;
+        }
+
+        class FakeView : System.Web.Mvc.IView
+        {
+            public void Render(System.Web.Mvc.ViewContext viewContext, TextWriter writer)
+            {
+            }
+        }
+
+        Node GetTemplateNode(Node nMail)
+        {
+            // Determine if any basic template has been selected for this email
+            string templateId = nMail.GetProperty(EnmUmbracoPropertyAlias.emailTemplate);
+            int nodeId;
+            if (int.TryParse(templateId, out nodeId))
+                return new Node(nodeId);
+            else
+                return null;
+        }
+
+        bool IsInlinerDisabled(Node nMail)
+        {
+            var nTemplate = GetTemplateNode(nMail);
+            if (nTemplate != null && nTemplate.Id > 0)
+                return nTemplate.GetProperty(EnmUmbracoPropertyAlias.disableCSSInlining) == "1";
+            else
+                return false;
+        }
+
         /// <summary>
         /// Loads the unparsed body text for the e-mail and returns it as a single (unparsed) string.
         /// </summary>
@@ -316,36 +360,47 @@ namespace PerplexMail
         {
             #region 1. Build the basic template of the email. Here we will determine where the email content will be placed and we will parse all email tags
             // Retrieve the template from the email node in Umbraco
-            string bodyContent = nMail.GetProperty(EnmUmbracoPropertyAlias.body);
-            // Determine if any basic template has been selected for this email
-            string templateID = nMail.GetProperty(EnmUmbracoPropertyAlias.emailTemplate);
-            int id;
-            string CSS = String.Empty;
-            if (!string.IsNullOrEmpty(templateID) && int.TryParse(templateID, out id))
+            string bodyContent;
+            try
             {
-                // Retrieve the selected basic template
-                Node nTemplate = new Node(id);
-                // Place the email body in the basic template. The special contenttag in the baisc template will be used for this
-                bodyContent = nTemplate.GetProperty(EnmUmbracoPropertyAlias.template).Replace(Constants.TEMPLATE_CONTENT_TAG, bodyContent);
-                CSS = nTemplate.GetProperty(EnmUmbracoPropertyAlias.css);
+                // Try as grid
+                bodyContent = GetContentAsGrid(nMail);
+            }
+            catch (Exception ex)
+            {
+                // Non-grid
+                bodyContent = nMail.GetProperty(EnmUmbracoPropertyAlias.body);
+                System.Diagnostics.Debug.WriteLine("Error loading 'Body' content: " + ex.ToString());
             }
 
+            // Determine if any basic template has been selected for this email
+            var nTemplate = GetTemplateNode(nMail);
+            string CSS = String.Empty;
+            if (nTemplate != null && nTemplate.Id > 0)
+            {
+                // Place the email body in the basic template. The special contenttag in the baisc template will be used for this
+                var template = nTemplate.GetProperty(EnmUmbracoPropertyAlias.templateMail);
+                if (String.IsNullOrEmpty(template))
+                    // Perhaps this Umbraco installation still has the old template alias
+                    template = nTemplate.GetProperty(EnmUmbracoPropertyAlias.template);
+                if (!String.IsNullOrEmpty(template))
+                    bodyContent = template.Replace(Constants.TEMPLATE_CONTENT_TAG, bodyContent);
+                // Inline CSS?
+                if (nTemplate.GetProperty(EnmUmbracoPropertyAlias.disableCSSInlining) != "1")
+                    // We will inline the CCS!
+                    CSS = nTemplate.GetProperty(EnmUmbracoPropertyAlias.css);
+            }
 
             // Determine the ID of the email we are about to send.
             // This is tricky because the log ID is an identity column. Furthermore if two emails are sent at the same time, the ID might be lower then it should be.
             // For now we will make an assumption regarding the ID, but this should be done in a more reliable fashion in the future
             string newID = GetNextLogMailId();
 
-            // Umbraco 7.0 has a new feature: 
-            // If you add an email tag in the HREF attribute of the hyperlink, the RichText Editor thinks the URL is not relative (valid) and adds /umbraco/ or / in front of the URL to "fix it".
-            // Counter this issue by filtering out the /umbraco/ and / prefix.
-            bodyContent = bodyContent.Replace("href=\"/umbraco/" + Constants.TAG_PREFIX, "href=\"" + Constants.TAG_PREFIX); 
+            bodyContent = bodyContent.Replace("href=\"/umbraco/" + Constants.TAG_PREFIX, "href=\"" + Constants.TAG_PREFIX)
+                                     .Replace("src=\"/umbraco/" + Constants.TAG_PREFIX, "src=\"" + Constants.TAG_PREFIX);
 
-            // Parse alle if/else tags
-            bodyContent = ReplaceIfThenElseStatements(bodyContent);
-
-            // Replace all email package tags with text based on the specified values.
-            bodyContent = ReplaceTags(bodyContent);
+            // Parse e-mail body
+            bodyContent = Helper.ParseText(bodyContent, _listOfTags);
             #endregion
 
             #region 2.We are done parsing the basic HTML template of the document. Now proces all links and images
@@ -359,13 +414,18 @@ namespace PerplexMail
             // Process all images
             ProcessImages(ref doc);
 
-            // Process all specified CSS styles
+            // Inline all specified CSS styles
             if (!String.IsNullOrEmpty(CSS))
-                ProcessCss(CSS, ref doc);
+                InlineCSS(CSS, ref doc);
             #endregion
 
             // We are done performing all the required HTML magic
             bodyContent = doc.DocumentNode.OuterHtml;
+
+            // Perform an extra check to make sure that browser-specific comment tags are also parsed (which unfortunately cannot be handled by the HTML agility pack)
+            bodyContent = bodyContent.Replace("src=\"/", "src=\"" + Helper.WebsiteUrl + "/")
+                                     .Replace("href=\"/", "href=\"" + Helper.WebsiteUrl + "/")
+                                     .Replace("background=\"/", "background=\"" + Helper.WebsiteUrl + "/");
 
             // Determine of there are any "view online" hyperlinks in the document. These require a special webversion URL.
             if (bodyContent.Contains(Constants.TEMPLATE_WEBVERSIONURL_TAG))
@@ -383,7 +443,7 @@ namespace PerplexMail
                 //tag.Attributes.Add("src", Helper.WebsiteUrl + Constants.STATISTICS_IMAGE + "?&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + newID + "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.view.ToString());
                 //tag.Attributes.Add("style", "opacity:0"); // Make the tag not "visible", but it still needs to be rendered by the client (else the image won't get loaded) so make sure not to use display:none
                 //doc.DocumentNode.LastChild.AppendChild(tag);
-            
+
                 string statTracker = "<img style=\"opacity:0;\" src=\"" + Helper.WebsiteUrl + Constants.STATISTICS_IMAGE + "?" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + newID + "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.view.ToString() + "\" />";
                 bodyContent += statTracker; // Place the stat tracker image at the end
             }
@@ -401,7 +461,7 @@ namespace PerplexMail
         /// </summary>
         /// <param name="CSS">The raw CSS code to parse</param>
         /// <param name="doc">The document to apply the styling to</param>
-        protected static void ProcessCss(String CSS, ref HtmlDocument doc)
+        protected static void InlineCSS(String CSS, ref HtmlDocument doc)
         {
             // Remove all single line comments from the code (starts with //)
             var regels = CSS.Split('\n');
@@ -410,7 +470,7 @@ namespace PerplexMail
                     regels[i] = String.Empty;
 
             // Collapse all the CSS into a single line (remove all enters)
-            CSS = String.Join(String.Empty, regels);
+            CSS = String.Join(String.Empty, regels).Replace("\r","");
 
             // Remove all multi line comments ==> /* comment */
             while (CSS.Contains("/*"))
@@ -435,23 +495,29 @@ namespace PerplexMail
                 if (matchCssStyle.Success)
                 {
                     var cssSelector = matchCssStyle.Groups["selector"].Value.Trim();
-                    var xpathSelector = Helper.CssToXpath(cssSelector);
-                    // Css-psuedo elements are not supported
-                    if (xpathSelector.Contains(':'))
-                        continue;
                     var cssStyle = matchCssStyle.Groups["style"].Value.Trim();
                     // In case multiple selectors of the same style
                     foreach (var subSelector in cssSelector.Split(','))
                     {
-                        var css = new cssStyle();
-                        css.selector = subSelector;
-                        css.xpath = xpathSelector;
-                        css.style = cssStyle.Replace("\"", "'");
-                        list.Add(css);
+                        var selector = subSelector;
+                        if (!String.IsNullOrEmpty(selector))
+                            selector = selector.Trim();
+                        
+                        if (!String.IsNullOrEmpty(selector) &&
+                            !selector.Contains('[') && // CSS styling through attributes are not supported
+                            !selector.Contains(':')) // CSS-psuedo elements are not supported
+                        {
+                            var css = new cssStyle();
+                            css.selector = selector.Trim();
+                            css.xpath = Helper.CssToXpath(selector.Trim());
+                            css.style = cssStyle.Replace("\"", "'");
+                            list.Add(css);
+                        }
                     }
                 }
 
             // Determine the weight of every CSS rule specified
+            int ordernumber = 0;
             foreach (var c in list)
             {
                 // Count the number of classes and identifiers used (. and #)
@@ -460,17 +526,19 @@ namespace PerplexMail
                 c.weight = 0; // Begin with 0 weight
                 c.weight += c.selector.Count(l => l == '#') * 100; // Each ID selector adds 100 points
                 c.weight += c.selector.Count(l => l == '.') * 10; // Each class adds 10 points
-                // Determine the number of keywords that are present in the CSS style
-                int numberOfKeywords = c.selector.Split(new String[] { " ", ".", "#" }, StringSplitOptions.RemoveEmptyEntries).Count(woord => woord.All(l => char.IsLetterOrDigit(l) || l == '-' || l == '_'));
+                // Determine the number of keywords that are present in t  he CSS style
+                int numberOfKeywords = c.selector.Split(new String[] { " ", ".", "#" }, StringSplitOptions.RemoveEmptyEntries).Count(woord =>
+                                woord.Split(new [] { ':', '['})[0].All(l => char.IsLetterOrDigit(l) || l == '-' || l == '_'));
                 // We will make a rough assumption: each class and id uses one keyword as well. So substract the total number of keywords with the number of classes and IDs.
                 // The remainder is the number of "element selectors" used.
                 int numberOfElementSelectors = numberOfKeywords - numberOfCssClassesAndIdentifiers;
                 if (numberOfElementSelectors > 0) // Confirm we have a positive number of elements
                     c.weight += numberOfElementSelectors; // We will consider each element to add 1 point of weight.
+                c.ordernumber = ordernumber++;
             }
 
-            // Sort all the styles by weight. The selector with the highest weight will be processed first
-            foreach (var c in list.OrderByDescending(cs => cs.weight))
+            // Sort all the styles by weight. The selector with the highest weight will be processed first, and if they have equal weight, by last-to-first appearance order
+            foreach (var c in list.OrderByDescending(cs => cs.weight).ThenByDescending(cs => cs.ordernumber))
             {
                 try
                 {
@@ -490,7 +558,7 @@ namespace PerplexMail
                                 // Generate a list of CSS styles properties that are currently applied to the element
                                 var currentStyles = htmlElement.Attributes["style"].Value.Split(new Char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(k => new CssStyleValue(k.Split(':')[0].Trim().ToLower(), k.Substring(k.IndexOf(':') + 1))).ToList();
                                 // Iterate over every style definition
-                                foreach (var cssStyle in c.style.Split(new Char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                                foreach (var cssStyle in c.style.Split(new Char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Reverse()) // From last to first in priority!
                                 {
                                     // Get the css style name (for example width, height, etc...)
                                     string keyword = cssStyle.Split(':')[0].Trim().ToLower();
@@ -500,16 +568,8 @@ namespace PerplexMail
                                         // If the keyowrd or value could not be deterined, skip it.
                                         continue;
 
-                                    // Determine if the style has already been applied to the element
-                                    var t = currentStyles.FirstOrDefault(k => k.keyword == keyword);
-                                    if (t == null)
-                                        // Style not added yet, add the specified CSS style to the element
-                                        currentStyles.Add(new CssStyleValue(keyword, value));
-                                    else if (t != null && // If the style has already been found... 
-                                        t.value.IndexOf("!important", StringComparison.OrdinalIgnoreCase) == -1 &&  // ... and the current style does not have the !important keyword...
-                                        value.IndexOf("!important", StringComparison.OrdinalIgnoreCase) >= 0) // ... and the current style we are trying to apply has the !important keyword... 
-                                        // ... then overwrite the style!
-                                        t.value = value;
+                                    // Digest CCS by splitting and adding it as needed
+                                    DigestCCS(currentStyles, keyword, value);
                                 }
                                 // Reapply the style to the element. Join all keys and values with : and join all styles with ;
                                 htmlElement.Attributes["style"].Value = String.Join(";", currentStyles.Select(csv => csv.keyword + ":" + csv.value));
@@ -519,6 +579,97 @@ namespace PerplexMail
                 catch
                 {
                 }
+            }
+
+            try
+            {
+                // Final pass: parse all TD for (v)aligns and bgcolors
+                foreach (HtmlNode htmlElement in doc.DocumentNode.SelectNodes("//table").Concat(doc.DocumentNode.SelectNodes("//td").Concat(doc.DocumentNode.SelectNodes("//tr")).Concat(doc.DocumentNode.SelectNodes("//p")))) // TODO: combine xpaths into one
+                {
+                    if (htmlElement.Attributes["style"] != null)
+                    {
+                        var currentStyles = htmlElement.Attributes["style"].Value.Split(new Char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(k => new CssStyleValue(k.Split(':')[0].Trim().ToLower(), k.Substring(k.IndexOf(':') + 1))).ToList();
+                        for (int i = currentStyles.Count - 1; i >= 0; i--)
+                        {
+                            var style = currentStyles[i];
+                            if (htmlElement.Name != "table")
+                            {
+                                if (htmlElement.Name != "tr")
+                                {
+                                    if (style.keyword.ToLower() == "vertical-align")
+                                    {
+                                        if (htmlElement.Attributes["valign"] == null)
+                                            htmlElement.Attributes.Add("valign", style.value.Trim());
+                                        else if (style.value.ToLower().Contains("!important"))
+                                            htmlElement.Attributes["valign"].Value = style.value.Split('!')[0].Trim();
+                                    }
+                                }
+                                if (style.keyword.ToLower() == "text-align")
+                                {
+                                    if (htmlElement.Attributes["align"] == null)
+                                        htmlElement.Attributes.Add("align", style.value.Trim());
+                                    else if (style.value.ToLower().Contains("!important"))
+                                        htmlElement.Attributes["align"].Value = style.value.Split('!')[0].Trim();
+                                }
+                            }
+                            if (style.keyword.ToLower() == "background" || style.keyword.ToLower() == "background-color")
+                            {
+                                if (htmlElement.Attributes["bgcolor"] == null)
+                                    htmlElement.Attributes.Add("bgcolor", style.value.Trim());
+                                else if (style.value.ToLower().Contains("!important"))
+                                    htmlElement.Attributes["bgcolor"].Value = style.value.Split('!')[0].Trim();
+                            }
+                        }
+
+                        // Reapply the style to the element. Join all keys and values with : and join all styles with ;
+                        htmlElement.Attributes["style"].Value = String.Join(";", currentStyles.Select(csv => csv.keyword + ":" + csv.value));
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+
+            try
+            {
+                foreach (HtmlNode htmlElement in doc.DocumentNode.SelectNodes("//*"))
+                    if (htmlElement.Attributes["style"] != null)
+                        htmlElement.Attributes["style"].Value = htmlElement.Attributes["style"].Value.Replace("!important", "");
+            }
+            catch
+            {
+            }
+        }
+
+        static void DigestCCS(List<CssStyleValue> list, string keywordToAdd, string valueToAdd)
+        {
+            // Determine if the style has already been applied to the element
+            var t = list.FirstOrDefault(k => k.keyword == keywordToAdd);
+            
+            // Has this style already been applied?
+            if (t == null)
+            {
+                // Make sure no style preceeded this style that overrules it (for example padding > padding-top)
+                var baseKeyword = keywordToAdd.Split('-')[0];
+
+                var baseStyle = list.FirstOrDefault(x => x.keyword == baseKeyword);
+                if (baseStyle != null)
+                {
+                    // A base style has been added before this one. Only overrule if the !important keyword is present 
+                    if (!baseStyle.value.Contains("!important") && valueToAdd.Contains("!important"))
+                        // Append the ipmortant element to the back
+                        list.Add(new CssStyleValue(keywordToAdd, valueToAdd));
+                }
+                else
+                    // Style not added yet, add the specified CSS style to the element
+                    list.Insert(0, new CssStyleValue(keywordToAdd, valueToAdd));
+            }
+            else
+            {
+                if (t.value.IndexOf("!important", StringComparison.OrdinalIgnoreCase) == -1 &&  // ... and the current style does not have the !important keyword...
+                    valueToAdd.IndexOf("!important", StringComparison.OrdinalIgnoreCase) >= 0) // ... and the current style we are trying to apply has the !important keyword... 
+                    t.value = valueToAdd; // ... then overwrite the style!
             }
         }
 
@@ -536,6 +687,7 @@ namespace PerplexMail
         class cssStyle
         {
             public int weight { get; set; }
+            public int ordernumber { get; set; }
             public string selector { get; set; }
             public string style { get; set; }
             public string xpath { get; set; }
@@ -543,17 +695,20 @@ namespace PerplexMail
 
         static void ProcessImages(ref HtmlDocument doc)
         {
-            // Iterate over all images embedded in the email
-            var query = doc.DocumentNode.SelectNodes("//img");
+            // Iterate over all src and background attributes used in the email
+            var query = doc.DocumentNode.SelectNodes("//*[@src or @background]");
             if (query != null)
-                foreach (HtmlNode image in query)
+                foreach (HtmlNode element in query)
                 {
-                    // Does the image have a relative URL (starts with a /)
-                    if (image.Attributes["src"] != null)
+                    // Does the attribute contain a relative URL (starts with a /)
+                    var attribute = element.Attributes["src"];
+                    if (element.Attributes["src"] == null)
+                        attribute = element.Attributes["background"];
+                    if (attribute != null)
                     {
-                        if (image.Attributes["src"].Value.StartsWith("/"))
-                            // Convert the URL to an absolute URL (so the image can be loaded from the server)
-                            image.Attributes["src"].Value = Helper.WebsiteUrl + image.Attributes["src"].Value;
+                        if (attribute.Value.StartsWith("/"))
+                            // Convert the URL to an absolute URL
+                            attribute.Value = Helper.WebsiteUrl + attribute.Value;
                     }
                 }
         }
@@ -577,7 +732,7 @@ namespace PerplexMail
                         hyperlink.Attributes["target"].Value = "_blank";
                     else
                         hyperlink.Attributes.Add("target", "_blank");
-                    
+
                     // Check if the hyperlink has a HREF attribute
                     if (hyperlink.Attributes["href"] != null)
                     {
@@ -694,7 +849,7 @@ namespace PerplexMail
             return sb.ToString();
         }
 
-        int Log(Exception ex = null) 
+        int Log(Exception ex = null)
         {
             // Has logging been disabled through Umbraco?
             if (IsLoggingDisabled)
@@ -741,6 +896,19 @@ namespace PerplexMail
                     if (!String.IsNullOrEmpty(BCC))
                         BCC = Security.Encrypt(BCC);
                 }
+                string website = "", specificurl = "";
+                if (HttpContext.Current != null)
+                {
+                    try
+                    {
+                        website = HttpContext.Current.Request.ServerVariables["server_name"];
+                        specificurl = HttpContext.Current.Request.ServerVariables["URL"];
+
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
 
                 var parameters = new {
                     to = To,
@@ -753,8 +921,8 @@ namespace PerplexMail
                     attachment = Attachments.Count > 0 ? SaveAttachmentsAndGenerateStorageString() : "",
                     host = _smtp.Host ?? String.Empty,
                     userID = _smtpUser ?? String.Empty,
-                    website = System.Web.HttpContext.Current != null ? System.Web.HttpContext.Current.Request.ServerVariables["server_name"] : String.Empty,
-                    specificurl = System.Web.HttpContext.Current != null ? System.Web.HttpContext.Current.Request.ServerVariables["URL"] : String.Empty,
+                    website = website,
+                    specificurl = specificurl,
                     ip = Helper.GetIp(),
                     emailID = EmailId,
                     alternativeView = AlternativeView ?? String.Empty,
@@ -793,9 +961,9 @@ namespace PerplexMail
         {
             // Remove old log entries
             Helper.RemoveOldLogEntries(EmailId); // TODO: Replace with SQL trigger?
-            
+
             // Has the email already been sent? We check this by checking the LOG status
-            if (LogId > 0) 
+            if (LogId > 0)
                 // The email has already been sent
                 return LogId;
             else
@@ -806,6 +974,12 @@ namespace PerplexMail
             {
                 if (Body == null || !Body.StartsWith("<!DOCTYPE"))
                     Body = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\"><html><head>" + _headTag + "</head><body>" + Body + "</body></html>";
+                else
+                {
+                    int index = Body.IndexOf("</head>");
+                    if (index >= 0)
+                        Body = Body.Insert(index, _headTag);
+                }
 
                 if (String.IsNullOrEmpty(AlternativeView))
                     _mail.Body = Body;
@@ -1005,8 +1179,8 @@ namespace PerplexMail
 
             // Validate e-mail node
             var nMail = new Node(umbracoEmailNodeId);
-            if (nMail == null || nMail.Id == 0 || nMail.NodeTypeAlias != EnmUmbracoDocumentTypeAlias.ActionEmail.ToString())
-                throw new Exception("The specified Umbraco Node with id '" + umbracoEmailNodeId.ToString() + "' does not exist or is not a valid mail nodde.");
+            if (nMail == null || nMail.Id == 0)
+                throw new Exception("The specified Umbraco Node with id '" + umbracoEmailNodeId.ToString() + "' does not exist.");
 
             // Create an e-mail object based on the settings in the specified Umbraco email node
             var m = new Email(umbracoEmailNodeId, values);
@@ -1027,21 +1201,23 @@ namespace PerplexMail
             if (request == null)
                 return 0;
             else
-                return SendUmbracoTestEmail(request.EmailNodeId, request.MailAddress, request.Tags);
+                return SendUmbracoTestEmail(request.EmailNodeId, request.MailAddresses, request.Tags);
         }
 
         /// <summary>
         /// Send a test email based on the configuration of an Umbraco email node. This email is sent exclusively to the specified recipient parameter (CC and BCC are ignored)
         /// </summary>
         /// <param name="umbracoEmailNodeId">The ID of the configured Umbraco email node</param>
-        /// <param name="recipient">The emailaddress to receive the test email</param>
+        /// <param name="recipients">The emailaddress to receive the test email</param>
         /// <param name="values">List of tags render in the email</param>
         /// <returns>The ID of the logged email</returns>
-        public static int SendUmbracoTestEmail(int umbracoEmailNodeId, MailAddress recipient, List<EmailTag> values)
+        public static int SendUmbracoTestEmail(int umbracoEmailNodeId, IEnumerable<MailAddress> recipients, List<EmailTag> values)
         {
             var m = new Email(umbracoEmailNodeId, values);
+
             m.To.Clear();
-            m.To.Add(recipient);
+            foreach (var recipient in recipients)
+                m.To.Add(recipient);
             m.CC.Clear();
             m.BCC.Clear();
             return m.SendEmail();
@@ -1102,7 +1278,7 @@ namespace PerplexMail
 
             // Filename in the beowser as "nodename - logId - email"
             string downloadFilename = new Node(m.EmailId).Name + " - " + logmailID.ToString();
-            
+
             if (m.To != null && m.To.Count > 0)
                 downloadFilename += " - " + m.To[0].Address;
 

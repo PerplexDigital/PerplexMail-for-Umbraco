@@ -7,3 +7,9 @@ F:\Projecten\PerplexMail\PerplexMail\bin\Debug\HtmlAgilityPack.dll
 F:\Projecten\PerplexMail\PerplexMail\bin\Debug\HtmlAgilityPack.pdb
 F:\Projecten\PerplexMail\PerplexMail\bin\Debug\HtmlAgilityPack.xml
 F:\Projecten\PerplexMail\PerplexMail\obj\Debug\PerplexMail.csprojResolveAssemblyReference.cache
+D:\Wouter\Github\PerplexMail\PerplexMail\bin\Debug\PerplexMail.dll.config
+D:\Wouter\Github\PerplexMail\PerplexMail\bin\Debug\PerplexMail.dll
+D:\Wouter\Github\PerplexMail\PerplexMail\bin\Debug\PerplexMail.pdb
+D:\Wouter\Github\PerplexMail\PerplexMail\obj\Debug\PerplexMail.csprojResolveAssemblyReference.cache
+D:\Wouter\Github\PerplexMail\PerplexMail\obj\Debug\PerplexMail.dll
+D:\Wouter\Github\PerplexMail\PerplexMail\obj\Debug\PerplexMail.pdb

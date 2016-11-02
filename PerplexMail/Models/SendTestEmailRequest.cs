@@ -8,17 +8,33 @@ namespace PerplexMail.Models
 {
     public class SendTestEmailRequest
     {
-        public string EmailAddress { get; set; }
+        public List<string> EmailAddresses { get; set; }
         public int EmailNodeId { get; set; }
         public List<EmailTag> Tags { get; set; }
-        public MailAddress MailAddress
+        public IEnumerable<MailAddress> MailAddresses
         {
             get
             {
-                if (!String.IsNullOrEmpty(EmailAddress))
-                    return new MailAddress(EmailAddress);
-                else
-                    return null;
+                if (EmailAddresses != null)
+                {
+                    foreach (var emailaddress in EmailAddresses)
+                    {
+                        if (!String.IsNullOrEmpty(emailaddress))
+                        {
+                            MailAddress email;
+                            try
+                            {
+                                email = new MailAddress(emailaddress);
+                            }
+                            catch (Exception)
+                            {
+                                email = null;
+                            }
+                            if (email != null)
+                                yield return email;
+                        }
+                    }
+                }
             }
         }
     }

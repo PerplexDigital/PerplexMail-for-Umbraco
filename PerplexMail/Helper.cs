@@ -14,6 +14,7 @@ using Microsoft.Win32;
 using umbraco.NodeFactory;
 using System.Data.Common;
 using PerplexMail.Models;
+using System.Web.Configuration;
 
 namespace PerplexMail
 {
@@ -107,15 +108,22 @@ namespace PerplexMail
         {
             get
             {
-                var c = System.Web.HttpContext.Current;
-                if (c != null)
+                var c = HttpContext.Current;
+                if (c != null && c.Request != null)
                 {
-                    if (!String.IsNullOrEmpty(c.Request.ServerVariables["HTTP_X_FORWARDED_PROTO"]))
-                        return c.Request.ServerVariables["HTTP_X_FORWARDED_PROTO"].ToLower() == "https";
-                    else
-                        return c.Request.IsSecureConnection;
-                } else
-                    return false;
+                    try
+                    {
+                        if (c.Request.ServerVariables != null && !String.IsNullOrEmpty(c.Request.ServerVariables["HTTP_X_FORWARDED_PROTO"]))
+                            return c.Request.ServerVariables["HTTP_X_FORWARDED_PROTO"].ToLower() == "https";
+                        else
+                            return c.Request.IsSecureConnection;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                return false;
             }
         }
 
@@ -137,78 +145,149 @@ namespace PerplexMail
             }
         }
 
-        // De MBFS-calculatorendashboard variant van de if-then-else parsing
-        public static string parseIfs(String sContent, List<EmailTag> values)
+        static readonly string[] OPERATORS = new[] { "=", "!=", ">", ">=", "<", "<=" };
+
+        public static string ParseText(String input, List<EmailTag> values)
         {
-            string sPattern = "{if (.*?)\\{/if}";
-            // Get alle if-then-else-constructies in de string
-            foreach (Match m in Regex.Matches(sContent, sPattern, RegexOptions.Multiline | RegexOptions.Singleline))
+            if (input != null)
             {
-                Boolean bUitkomstIf = false;
-
-                // Bepaal of we het if-gedeelte of het else-gedeelte moeten weergeven (oftewel parse de if constructie)
-                string sPatternIfStatement = "{if.*?}";
-                Match mIf = Regex.Match(m.Value, sPatternIfStatement);
-
-                // Kijk of er variabelen in staan
-                string lefthandside = String.Empty; string righthandside = String.Empty; string sOperator = String.Empty;
-
-                // Bepaal de operator
-                if (mIf.Value.Contains("!="))
-                    sOperator = "!=";
-                else if (mIf.Value.Contains("="))
-                    sOperator = "=";
-
-                int positieOperator = mIf.Value.IndexOf(sOperator);
-
-                lefthandside = mIf.Value.Substring(0, positieOperator).Replace("{if", "").Trim();
-                righthandside = mIf.Value.Substring(positieOperator + sOperator.Length, mIf.Value.Length - (positieOperator + sOperator.Length)).Replace("}", "").Trim();
-
-                if (sOperator == "=")
-                    bUitkomstIf = parseTags(lefthandside, values).Replace("'", "").ToString() == parseTags(righthandside, values).Replace("'", "").ToString();
-                else if (sOperator == "!=")
-                    bUitkomstIf = parseTags(lefthandside, values).Replace("'", "").ToString() != parseTags(righthandside, values).Replace("'", "").ToString();
-
-                String sOutputIfThenElse = String.Empty;
-
-                if (bUitkomstIf)        // output if-part
+                input = ParseTags(input, values);
+                var stack = new Stack<int>();
+                for (int i = input.Length -1; i >= 0; i--)
                 {
-                    int positieElseOfEindeIf;
-                    if (m.Value.Contains("{else}"))
-                        positieElseOfEindeIf = m.Value.IndexOf("{else}");
-                    else
-                        positieElseOfEindeIf = m.Value.IndexOf("{/if}");
+                    if (input[i] == '{')
+                    {
+                        // End if statment?
+                        if (input?[i + 1] == '/' &&
+                            input?[i + 2] == 'i' &&
+                            input?[i + 3] == 'f' &&
+                            input?[i + 4] == '}')
+                        {
+                            // End if statement
+                            stack.Push(i + 5);
+                        }
+                        else if (input?[i + 1] == 'i' && input?[i + 2] == 'f')
+                        {
+                            // If statement
+                            if (stack.Count == 0)
+                                // stack is empty
+                                continue;
 
-                    sOutputIfThenElse = m.Value.Substring(0, positieElseOfEindeIf).Replace(mIf.Value, "");
-                }
-                else if (m.Value.Contains("{else}"))                   // output else-part of vergeet if-part
-                {
-                    int positieElse; int positieEndIf;
-                    positieElse = m.Value.IndexOf("{else}");
-                    positieEndIf = m.Value.IndexOf("{/if}");
-                    sOutputIfThenElse = m.Value.Substring(positieElse + "{else}".Length, positieEndIf - (positieElse + "{else}".Length));
-                }
+                            var ifStatementStart = i;
+                            var ifStatementEnd = stack.Pop();
 
-                sContent = sContent.Replace(m.Value, sOutputIfThenElse);
-                sContent = parseIfs(sContent, values);                      // En hier roepen we onszelf nog een keer aan, om eventueel geneste if's te verhelpen
+                            var ifStatement = input.Substring(ifStatementStart, ifStatementEnd - ifStatementStart);
+                            var parsedIfStatement = ParseIf(ifStatement);
+
+                            // Inject content
+                            var before = input.Substring(0, ifStatementStart);
+                            var after = input.Substring(ifStatementEnd);
+                            input = before + parsedIfStatement + after;
+                        }
+                    }
+                }
             }
 
-            return sContent;
+            return input;
         }
 
-        /// <summary>
-        /// Replaces in the input all First-items with the Second-items
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        static string parseTags(String input, List<EmailTag> values)
+        public static string ParseTags(String input, List<EmailTag> values)
         {
-            if (values != null && values.Count > 0)
+            if (input != null && values != null && values.Count > 0)
                 // Iterate through all pairs in the list and replace all the tags in the body
                 foreach (var p in values)
                     if (p != null && p.FullTag != null && p.Value != null)
-                        input = input.Replace(p.FullTag, p.Value);
+                        input = input.Replace(p.FullTag, p.Value ?? "");
+
+            return input;
+        }
+
+        public static string ParseIf(string input)
+        {
+            string sPattern = "{if (.*?)}(.*?){/if}";
+            // Get alle if-then-else-constructies in de string
+            foreach (Match ifBlock in Regex.Matches(input, sPattern, RegexOptions.Multiline | RegexOptions.Singleline))
+            {
+                if (ifBlock.Groups.Count != 3)
+                    // Invalid
+                    continue;
+
+                Boolean statementEvaluatesAsTrue = false;
+
+                // Bepaal of we het if-gedeelte of het else-gedeelte moeten weergeven (oftewel parse de if constructie)
+                // Read the if-statement
+                var statement = ifBlock.Groups[1].Value;
+
+                // Kijk of er variabelen in staan
+                var variables = statement.Split(OPERATORS, StringSplitOptions.RemoveEmptyEntries);
+
+                if (variables != null)
+                {
+                    if (variables.Length == 1)
+                        bool.TryParse(statement, out statementEvaluatesAsTrue);
+                    else if (variables.Length == 2)
+                    {
+                        var lefthandside = variables[0];
+                        if (lefthandside != null)
+                            lefthandside = lefthandside.Trim();
+
+                        var righthandside = variables[1];
+                        if (righthandside != null)
+                            righthandside = righthandside.Trim();
+
+                        // Escape all special characters so our regex parser doens't get confused!
+                        var matchStatement = Regex.Escape(variables[0]) + "(.*?)" + Regex.Escape(variables[1]);
+
+                        var operatorCapture = Regex.Match(statement, matchStatement);
+                        if (operatorCapture.Groups.Count != 2)
+                            // Trouble reading the operator!
+                            continue;
+
+                        var @operator = operatorCapture.Groups[1].Value;
+                        if (@operator == "=")
+                            statementEvaluatesAsTrue = lefthandside == righthandside;
+                        else if (@operator == "!=")
+                            statementEvaluatesAsTrue = lefthandside != righthandside;
+                        else
+                        {
+                            decimal tmp1, tmp2;
+                            if (decimal.TryParse(lefthandside, out tmp1) && decimal.TryParse(righthandside, out tmp2))
+                            {
+                                if (@operator == ">")
+                                    statementEvaluatesAsTrue = tmp1 > tmp2;
+                                else if (@operator == ">=")
+                                    statementEvaluatesAsTrue = tmp1 >= tmp2;
+                                else if (@operator == "<")
+                                    statementEvaluatesAsTrue = tmp1 < tmp2;
+                                else if (@operator == "<=")
+                                    statementEvaluatesAsTrue = tmp1 <= tmp2;
+                            }
+                            else
+                            {
+                                var comparisonResult = String.Compare(lefthandside, righthandside);
+                                if (@operator == ">")
+                                    statementEvaluatesAsTrue = comparisonResult > 0;
+                                else if (@operator == ">=")
+                                    statementEvaluatesAsTrue = comparisonResult >= 0;
+                                else if (@operator == "<")
+                                    statementEvaluatesAsTrue = comparisonResult < 0;
+                                else if (@operator == "<=")
+                                    statementEvaluatesAsTrue = comparisonResult <= 0;
+                            }
+                        }
+                    }
+                }
+
+                var blocks = ifBlock.Groups[2].Value.Split(new[] { "{else}" }, StringSplitOptions.None);
+
+                String parsedText = null;
+                if (statementEvaluatesAsTrue)
+                    parsedText = blocks[0];
+                else if (blocks.Length > 1)
+                    parsedText = blocks[1];
+
+                input = input.Replace(ifBlock.Value, parsedText);
+            }
 
             return input;
         }
@@ -303,15 +382,15 @@ namespace PerplexMail
             },
             //* ~ + >
             new RegexReplace {
-                Regex = new Regex(@"([a-zA-Z0-9_\-\*])~([a-zA-Z0-9_\-\*])", RegexOptions.Multiline),
+                Regex = new Regex(@"([a-zA-Z0-9_\-\*])~([a-zA-Z0-9_\-\*\.\#])", RegexOptions.Multiline),
                 Replace = @"$1/following-sibling::$2"
             },
             new RegexReplace {
-                Regex = new Regex(@"([a-zA-Z0-9_\-\*])\+([a-zA-Z0-9_\-\*])", RegexOptions.Multiline),
+                Regex = new Regex(@"([a-zA-Z0-9_\-\*])\+([a-zA-Z0-9_\-\*\.\#])", RegexOptions.Multiline),
                 Replace = @"$1/following-sibling::*[1]/self::$2"
             },
             new RegexReplace {
-                Regex = new Regex(@"([a-zA-Z0-9_\-\*])>([a-zA-Z0-9_\-\*])", RegexOptions.Multiline),
+                Regex = new Regex(@"([a-zA-Z0-9_\-\*])>([a-zA-Z0-9_\-\*\.\#])", RegexOptions.Multiline),
                 Replace = @"$1/$2"
             },
             // all unescaped stuff escaped
@@ -402,17 +481,20 @@ namespace PerplexMail
         {
             // Als je op een loadbalanced-omgeving zit, dan is het een ander verhaal
             String ip = String.Empty;
-            try
+            if (HttpContext.Current != null)
             {
-                if (!String.IsNullOrEmpty(System.Web.HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"]))
-                    ip = System.Web.HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
-                else
-                    ip = System.Web.HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"];
-            }
-            catch (Exception)
-            {
-                ip = "-";
-                //' WB + JS 29-04-2012 Dit kan bijvoorbeeld optreden wanneer je vanuit Ogone via async deze functie aanroept
+                try
+                {
+                    if (!String.IsNullOrEmpty(HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"]))
+                        ip = HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+                    else
+                        ip = HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"];
+                }
+                catch (Exception)
+                {
+                    ip = "-";
+                    //' WB + JS 29-04-2012 Dit kan bijvoorbeeld optreden wanneer je vanuit Ogone via async deze functie aanroept
+                }
             }
 
             return ip;
@@ -691,7 +773,7 @@ namespace PerplexMail
             // Find the expiration settings for the log
             string expirationSettings = null;
             var n = new Node(emailId);
-            if (n.Id > 0 && n.NodeTypeAlias == EnmUmbracoDocumentTypeAlias.ActionEmail.ToString())
+            if (n.Id > 0)
             {
                 // Search the current e-mail node
                 var p = n.GetProperty(EnmUmbracoPropertyAlias.logExpiration.ToString());
@@ -782,7 +864,40 @@ namespace PerplexMail
         {
             get
             {
-                return HttpContext.Current.ApplicationInstance.Modules.AllKeys.Contains(Constants.WEBCONFIG_MODULE_NAME);
+                // Get the module section of the web.config
+                var section = (HttpModulesSection)ConfigurationManager.GetSection("system.web/httpModules");
+                // Check if our module exists
+                // The value of the second parameter doens't seem to matter...
+                var index = section.Modules.IndexOf(new HttpModuleAction(Constants.WEBCONFIG_MODULE_NAME, "PerplexMail.HttpStatisticsModule"));
+
+                // Index greater than -1 = found, -1 = not found
+                return index >= 0;
+
+                // Old method, but the HttpContext isn't always available!
+                //return HttpContext.Current.ApplicationInstance.Modules.AllKeys.Contains(Constants.WEBCONFIG_MODULE_NAME);
+            }
+        }
+
+        public static bool IsBackofficeRequest
+        {
+            get
+            {
+                // Else check if we are currently on a /umbraco/... page. In that case we are definitely in the backoffice
+                string backofficeUrl = ConfigurationManager.AppSettings["umbracoPath"] ?? "/umbraco";
+                if (backofficeUrl.StartsWith("~"))
+                    backofficeUrl = backofficeUrl.Substring(1);
+                if (!backofficeUrl.EndsWith("/"))
+                    backofficeUrl = backofficeUrl + "/";
+                backofficeUrl += "backoffice/";
+                return HttpContext.Current != null && HttpContext.Current.Request.Url.AbsolutePath.StartsWith(backofficeUrl);
+            }
+        }
+
+        public static bool IsTestMailRequest
+        {
+            get
+            {
+                return HttpContext.Current != null && HttpContext.Current.Request.Url.AbsolutePath == "/base/PerplexMail/SendTestMail";
             }
         }
     }

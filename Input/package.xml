@@ -27,7 +27,7 @@
           <umbracoNaviHide>0</umbracoNaviHide>
           <EmailTemplate id="1063" parentID="1061" level="3" creatorID="0" sortOrder="0" createDate="2015-07-29T14:14:03" updateDate="2015-07-29T14:14:03" nodeName="Basic template" urlName="basic-template" path="-1,1060,1061,1063" isDoc="" nodeType="1058" creatorName="techniek@perplex.nl" writerName="techniek@perplex.nl" writerID="0" template="0" nodeTypeAlias="EmailTemplate">
             <umbracoNaviHide>0</umbracoNaviHide>
-            <template><![CDATA[<style>
+            <templateMail><![CDATA[<style>
 /* MEDIA QUERIES > http://zurb.com/ink/docs.php */
 @media only screen and (max-width: 600px) {
     /* BASIC MOBILE */
@@ -123,7 +123,7 @@
             </center>
         </td>
     </tr>
-</table>]]></template>
+</table>]]></templateMail>
             <css><![CDATA[/* CLIENT-SPECIFIC STYLES & RESET > http://zurb.com/ink/docs.php */
 #outlook a {padding:0;}
 body{width:100% !important; min-width: 100%; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; margin:0; padding:0;}
@@ -693,7 +693,7 @@ Please take note that test emails will only be sent to the specified receiver he
       <GenericProperties>
         <GenericProperty>
           <Name>Template</Name>
-          <Alias>template</Alias>
+          <Alias>templateMail</Alias>
           <Type>Umbraco.TextboxMultiple</Type>
           <Definition>c6bac0dd-4ab9-45b1-8e30-e4b619ee5da3</Definition>
           <Tab>Content</Tab>

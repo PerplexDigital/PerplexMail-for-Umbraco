@@ -1,4 +1,6 @@
-﻿namespace PerplexMail
+﻿using System;
+
+namespace PerplexMail
 {
     /// <summary>
     /// An Enumeration that determines the status of the email that was sent.
@@ -20,7 +22,6 @@
     {
         PerplexMail,
         EmailBase,
-        ActionEmail,
         EmailFolder,
         PerplexMailFolder,
         EMailTemplate,
@@ -49,8 +50,10 @@
         bcc,
         disableAutomatedLogging,
         logExpiration,
-        template,
+        template, // Only kept for backwards compatibility, use templateMail
+        templateMail,
         css,
+        disableCSSInlining,
     }
 
     /// <summary>
