@@ -229,11 +229,19 @@ namespace PerplexMail
                     {
                         var lefthandside = variables[0];
                         if (lefthandside != null)
+                        {
                             lefthandside = lefthandside.Trim();
+                            if (lefthandside.Length > 1 && lefthandside[0] == '\'' && lefthandside[lefthandside.Length - 1] == '\'')
+                                lefthandside = lefthandside.Substring(1, lefthandside.Length - 2);
+                        }
 
                         var righthandside = variables[1];
                         if (righthandside != null)
+                        {
                             righthandside = righthandside.Trim();
+                            if (righthandside.Length > 1 && righthandside[0] == '\'' && righthandside[righthandside.Length-1] == '\'')
+                                righthandside = righthandside.Substring(1, righthandside.Length - 2);
+                        }
 
                         // Escape all special characters so our regex parser doens't get confused!
                         var matchStatement = Regex.Escape(variables[0]) + "(.*?)" + Regex.Escape(variables[1]);
