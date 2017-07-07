@@ -49,6 +49,9 @@ namespace PerplexMail.UmbracoForms
         {
             var emailTags = new List<EmailTag>();
 
+            // Add record id
+            emailTags.Add(new EmailTag("[#recordId#]", record.Id.ToString()));
+
             List<EmailTag> allTags = record
                 .RecordFields
                 .Values
