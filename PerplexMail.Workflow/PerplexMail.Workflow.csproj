@@ -107,7 +107,7 @@
     <ItemGroup>
       <UmbracoPackageFiles Include="$(BuildDir)\**\*.*" />
     </ItemGroup>
-   <!-- <MSBuild.Umbraco.Tasks.Package ManifestFile="$(BuildDir)\package.xml" WorkingDirectory="$(BuildDir)" OutputDirectory="$(OutputDir)" Files="@(UmbracoPackageFiles)" />-->
+    <!--<MSBuild.Umbraco.Tasks.Package ManifestFile="$(BuildDir)\package.xml" WorkingDirectory="$(BuildDir)" OutputDirectory="$(OutputDir)" Files="@(UmbracoPackageFiles)" />-->
     <RemoveDir Directories="$(BuildDir)" Condition="Exists('$(BuildDir)')" />
     <Message Text="Nieuwe package gegenereerd ==&gt; $(SolutionDir)Output\PerplexMail $(PackageVersion).zip" Importance="high" />
   </Target>
