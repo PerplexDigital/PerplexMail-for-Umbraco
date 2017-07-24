@@ -70,7 +70,7 @@
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(TargetPath)" "$(SolutionDir)Output\" /Y /S</PostBuildEvent>
   </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
@@ -107,7 +107,7 @@
     <ItemGroup>
       <UmbracoPackageFiles Include="$(BuildDir)\**\*.*" />
     </ItemGroup>
-    <MSBuild.Umbraco.Tasks.Package ManifestFile="$(BuildDir)\package.xml" WorkingDirectory="$(BuildDir)" OutputDirectory="$(OutputDir)" Files="@(UmbracoPackageFiles)" />
+   <!-- <MSBuild.Umbraco.Tasks.Package ManifestFile="$(BuildDir)\package.xml" WorkingDirectory="$(BuildDir)" OutputDirectory="$(OutputDir)" Files="@(UmbracoPackageFiles)" />-->
     <RemoveDir Directories="$(BuildDir)" Condition="Exists('$(BuildDir)')" />
     <Message Text="Nieuwe package gegenereerd ==&gt; $(SolutionDir)Output\PerplexMail $(PackageVersion).zip" Importance="high" />
   </Target>
