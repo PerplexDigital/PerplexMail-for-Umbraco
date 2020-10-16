@@ -1002,6 +1002,10 @@ namespace PerplexMail
                         _mail.Attachments.Add(new System.Net.Mail.Attachment(a.FileDirectory + a.FileName));
                 }
                 _smtp.Send(_mail);
+
+                // Dispose of SmtpClient
+                _smtp.Dispose();
+
                 return Log();
             }
             catch (Exception ex)
