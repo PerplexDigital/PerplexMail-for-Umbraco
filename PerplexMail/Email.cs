@@ -444,7 +444,7 @@ namespace PerplexMail
                 //tag.Attributes.Add("style", "opacity:0"); // Make the tag not "visible", but it still needs to be rendered by the client (else the image won't get loaded) so make sure not to use display:none
                 //doc.DocumentNode.LastChild.AppendChild(tag);
 
-                string statTracker = "<img style=\"opacity:0;\" src=\"" + Helper.WebsiteUrl + Constants.STATISTICS_IMAGE + "?" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + newID + "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.view.ToString() + "\" />";
+                string statTracker = "<img style=\"opacity:0;\" src=\"" + Helper.WebsiteUrl + Constants.STATISTICS_IMAGE + "?" + Constants.STATISTICS_QUERYSTRINGPARAMETER_MAILID + "=" + newID + "&" + Constants.STATISTICS_QUERYSTRINGPARAMETER_ACTION + "=" + EnmAction.view.ToString() + "&ipignore=true" + "\" />";
                 bodyContent += statTracker; // Place the stat tracker image at the end
             }
             #endregion
