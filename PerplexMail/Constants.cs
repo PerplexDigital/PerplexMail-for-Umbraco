@@ -250,9 +250,9 @@ ON
 WHERE 
 	(@status = -1)
 OR 
-	(@status = 0 AND v.[viewed] IS NULL AND c.[clicked] IS NULL AND w.[webversion] IS NULL and result.[exception] IS NULL) 
+	(@status = 0 AND v.[viewed] IS NULL AND c.[clicked] IS NULL AND w.[webversion] IS NULL AND ISNULL(result.[exception],'') = '') 
 OR 
-	(@status = 1 AND result.[exception] IS NOT NULL) 
+	(@status = 1 AND ISNULL(result.[exception],'') <> '') 
 OR 
 	(@status = 2 AND (v.[viewed] IS NOT NULL OR c.[clicked] IS NOT NULL OR w.[webversion] IS NOT NULL)) 
 OR 
